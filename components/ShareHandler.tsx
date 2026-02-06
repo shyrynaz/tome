@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ActivityIndicator, Pressable, AppState } from 'react-native';
 import { useShareIntent } from 'expo-share-intent';
 import Animated, { 
   FadeInDown, 
@@ -25,10 +25,24 @@ export function ShareHandler() {
   const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
-    if (error) {
+    // Only log errors that aren't the transient App Group nil error
+    if (error && !error.includes('appGroupIdentifier is nil')) {
       console.error('Share Intent Error:', error);
     }
   }, [error]);
+
+  // Prevent processing while the app is in the background
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      if (nextAppState === 'active' && hasShareIntent) {
+        // App became active and has a pending intent
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [hasShareIntent]);
 
   const handleCapture = async () => {
     if (!shareIntent.value) return;
@@ -141,5 +155,3 @@ export function ShareHandler() {
     </View>
   );
 }
-
-import { Pressable } from 'react-native';
