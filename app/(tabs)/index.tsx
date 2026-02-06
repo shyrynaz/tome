@@ -2,18 +2,32 @@ import { View, SafeAreaView, ScrollView, Pressable, ActivityIndicator } from 're
 import { Text } from '@/components/ui/text';
 import { useQuery, useAction, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { useUniwind } from 'uniwind';
 import { LinearGradient } from 'expo-linear-gradient';
-import { CheckCircle2Icon, CircleIcon, SparklesIcon, TrophyIcon, BrainCircuitIcon, CheckIcon } from 'lucide-react-native';
+import { 
+  CheckCircle2Icon, 
+  CircleIcon, 
+  SparklesIcon, 
+  TrophyIcon, 
+  BrainCircuitIcon, 
+  CheckIcon,
+  ZapIcon,
+  LayoutGridIcon,
+  FlameIcon
+} from 'lucide-react-native';
 import { Icon } from '@/components/ui/icon';
-import Animated, { FadeInDown, FadeOutLeft } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeOutLeft, Layout } from 'react-native-reanimated';
 import { useState } from 'react';
 import * as Haptics from 'expo-haptics';
 import { Id } from '@/convex/_generated/dataModel';
 import { FocusMode } from '@/components/FocusMode';
+import { useUser } from '@clerk/clerk-expo';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function DailyPlanScreen() {
-  const { theme } = useUniwind();
+  const { user } = useUser();
   const tasks = useQuery(api.tasks.list);
   const generatePlan = useAction(api.planner.generateDailyPlan);
   const updateTaskStatus = useMutation(api.tasks.updateStatus);
@@ -24,8 +38,8 @@ export default function DailyPlanScreen() {
   const [showFocusMode, setShowFocusMode] = useState(false);
 
   const today = new Date().toLocaleDateString('en-US', { 
-    weekday: 'long', 
-    month: 'long', 
+    weekday: 'short', 
+    month: 'short', 
     day: 'numeric' 
   });
 
@@ -60,157 +74,212 @@ export default function DailyPlanScreen() {
   const pendingTasks = tasks?.filter(t => t.status === 'todo') || [];
   const completedTasks = tasks?.filter(t => t.status === 'done') || [];
   const focusTask = pendingTasks[0];
+  
+  const totalTasks = (tasks?.length || 0);
+  const progress = totalTasks > 0 ? (completedTasks.length / totalTasks) * 100 : 0;
 
   return (
     <View className="flex-1 bg-background">
       <LinearGradient
-        colors={['rgba(99, 102, 241, 0.08)', 'transparent', 'transparent']}
+        colors={['rgba(139, 92, 246, 0.15)', 'transparent', 'transparent']}
         className="absolute inset-0"
+        pointerEvents="none"
       />
       
       <SafeAreaView className="flex-1">
         <ScrollView className="flex-1 px-6 pt-4" showsVerticalScrollIndicator={false}>
+          
+          {/* Top Bar */}
           <View className="flex-row items-center justify-between mb-8">
-            <View>
-              <Text className="text-muted-foreground font-outfit-medium text-sm uppercase tracking-widest">{today}</Text>
-              <Text className="font-outfit-bold text-4xl tracking-tighter mt-1">Today's Plan</Text>
+            <View className="flex-row items-center gap-3">
+              <Avatar className="size-10 border border-white/10">
+                <AvatarImage source={{ uri: user?.imageUrl }} />
+                <AvatarFallback className="bg-primary">
+                  <Text className="text-white text-xs">{user?.firstName?.[0] || 'U'}</Text>
+                </AvatarFallback>
+              </Avatar>
+              <View>
+                <Text className="text-muted-foreground font-outfit-medium text-[10px] uppercase tracking-[2px]">
+                  {today}
+                </Text>
+                <Text className="font-outfit-bold text-lg text-foreground tracking-tight">
+                  Hi, {user?.firstName || 'Tome Traveler'}
+                </Text>
+              </View>
             </View>
             <Pressable 
               onPress={handleGeneratePlan}
               disabled={isPlanning}
-              className={`h-12 w-12 items-center justify-center rounded-2xl bg-indigo-500 shadow-lg shadow-indigo-500/20 ${isPlanning ? 'opacity-50' : ''}`}
+              className="size-10 items-center justify-center rounded-2xl bg-white/5 border border-white/10"
             >
               {isPlanning ? (
-                <ActivityIndicator color="white" size="small" />
+                <ActivityIndicator color="#8B5CF6" size="small" />
               ) : (
-                <Icon as={BrainCircuitIcon} className="text-white size-6" />
+                <Icon as={BrainCircuitIcon} className="text-primary size-5" />
               )}
             </Pressable>
           </View>
 
-          {/* AI Suggestion Area */}
-          {aiSuggestion && (
-            <Animated.View 
-              entering={FadeInDown.springify()}
-              className="mb-8 bg-card/30 border border-white/5 p-6 rounded-[24px] backdrop-blur-md"
-            >
-              <View className="flex-row items-center justify-between mb-4">
-                <View className="flex-row items-center gap-2">
-                  <View className="bg-primary/20 p-2 rounded-xl">
-                    <Icon as={SparklesIcon} className="size-4 text-primary" />
+          {/* Hero Bento Section */}
+          <Animated.View entering={FadeInDown.delay(100).springify()} className="mb-10">
+            <Card className="bg-card/40 border-white/5 rounded-[32px] overflow-hidden backdrop-blur-3xl">
+              <CardContent className="p-6">
+                <View className="flex-row items-center justify-between mb-4">
+                  <View className="flex-row items-center gap-2">
+                    <Icon as={LayoutGridIcon} className="size-4 text-primary" />
+                    <Text className="text-primary font-outfit-bold text-[10px] uppercase tracking-widest">Daily Progress</Text>
                   </View>
-                  <Text className="text-primary font-outfit-bold text-xs uppercase tracking-widest">AI Strategist</Text>
+                  <Text className="text-foreground font-outfit-bold text-sm">{Math.round(progress)}% Done</Text>
                 </View>
-                <Pressable 
-                  onPress={() => setAiSuggestion(null)}
-                  className="bg-white/5 px-3 py-1.5 rounded-full"
-                >
-                  <Text className="text-muted-foreground font-outfit-medium text-[10px] uppercase tracking-wider">Dismiss</Text>
-                </Pressable>
-              </View>
-              <Text className="font-outfit text-foreground/90 leading-7 text-lg">{aiSuggestion}</Text>
-            </Animated.View>
-          )}
+                <Progress value={progress} className="h-2 bg-white/5" />
+                <View className="flex-row items-center gap-4 mt-6">
+                   <View className="flex-1 flex-row items-center gap-3 bg-white/5 p-3 rounded-2xl border border-white/5">
+                      <View className="bg-amber-500/20 p-2 rounded-xl">
+                        <Icon as={FlameIcon} className="size-4 text-amber-500" />
+                      </View>
+                      <View>
+                        <Text className="text-foreground font-outfit-bold text-base">5</Text>
+                        <Text className="text-muted-foreground font-outfit text-[10px] uppercase">Streak</Text>
+                      </View>
+                   </View>
+                   <View className="flex-1 flex-row items-center gap-3 bg-white/5 p-3 rounded-2xl border border-white/5">
+                      <View className="bg-indigo-500/20 p-2 rounded-xl">
+                        <Icon as={CheckCircle2Icon} className="size-4 text-indigo-500" />
+                      </View>
+                      <View>
+                        <Text className="text-foreground font-outfit-bold text-base">{completedTasks.length}/{totalTasks}</Text>
+                        <Text className="text-muted-foreground font-outfit text-[10px] uppercase">Tasks</Text>
+                      </View>
+                   </View>
+                </View>
+              </CardContent>
+            </Card>
+          </Animated.View>
 
-          {/* Focus Section */}
+          {/* Focus Bento Section */}
           {focusTask ? (
             <Animated.View 
               entering={FadeInDown.delay(200).springify()}
               className="mb-10"
             >
-              {/* Focus Card Gradient Border */}
               <View className="p-[1px] rounded-[32px] overflow-hidden">
                 <LinearGradient
-                  colors={['rgba(139, 92, 246, 0.5)', 'rgba(245, 158, 11, 0.2)']}
+                  colors={['rgba(139, 92, 246, 0.4)', 'rgba(245, 158, 11, 0.2)']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
                 />
-                <View className="bg-[#0F0F16]/90 p-6 rounded-[31px] backdrop-blur-xl">
-                   {/* Ambient Glow */}
-                   <View className="absolute top-0 right-0 w-40 h-40 bg-primary/20 blur-[60px] -mr-10 -mt-10 rounded-full" />
+                <View className="bg-card/90 p-6 rounded-[31px] backdrop-blur-xl">
+                  {/* Glow */}
+                  <View className="absolute top-0 right-0 w-40 h-40 bg-primary/20 blur-[60px] -mr-10 -mt-10 rounded-full" />
                    
                   <View className="flex-row items-center justify-between mb-6">
-                    <View className="flex-row items-center gap-2">
-                      <View className="bg-primary/10 p-2 rounded-full">
-                        <Icon as={TrophyIcon} className="size-4 text-primary" />
-                      </View>
-                      <Text className="text-primary font-outfit-bold text-xs uppercase tracking-widest">Current Focus</Text>
-                    </View>
+                    <Badge className="bg-primary/20 border-primary/20 flex-row gap-1.5 items-center">
+                      <Icon as={TrophyIcon} className="size-3 text-primary" />
+                      <Text className="text-primary font-outfit-bold text-[10px] uppercase tracking-widest">Main Focus</Text>
+                    </Badge>
                     {focusTask.priority === 'high' && (
-                       <View className="bg-destructive/10 px-3 py-1 rounded-full border border-destructive/20">
+                       <Badge variant="destructive" className="bg-destructive/20 border-destructive/20">
                           <Text className="text-destructive font-outfit-bold text-[10px] uppercase tracking-wider">Urgent</Text>
-                       </View>
+                       </Badge>
                     )}
                   </View>
                   
-                  <Text className="font-outfit-bold text-3xl leading-9 mb-8 text-foreground tracking-tight">{focusTask.title}</Text>
+                  <Text className="font-outfit-bold text-3xl leading-9 mb-10 text-foreground tracking-tight">{focusTask.title}</Text>
                   
                   <View className="flex-row gap-3">
-                    <Pressable 
+                    <Button 
+                      variant="outline"
                       onPress={() => setShowFocusMode(true)}
-                      className="bg-white/5 active:bg-white/10 flex-1 py-4 rounded-2xl flex-row items-center justify-center gap-2 border border-white/5"
+                      className="flex-1 bg-white/5 border-white/10 h-14 rounded-2xl"
                     >
-                      <Icon as={TrophyIcon} className="size-4 text-muted-foreground" />
-                      <Text className="text-muted-foreground font-outfit-semibold text-sm">Focus Mode</Text>
-                    </Pressable>
+                      <View className="flex-row items-center gap-2">
+                        <Icon as={TrophyIcon} className="size-4 text-muted-foreground" />
+                        <Text className="text-muted-foreground font-outfit-semibold text-sm">Focus Mode</Text>
+                      </View>
+                    </Button>
                     
-                    <Pressable 
+                    <Button 
                       onPress={() => handleCompleteTask(focusTask._id)}
                       disabled={completingTaskId === focusTask._id}
-                      className="bg-primary active:bg-primary/90 flex-1 py-4 rounded-2xl flex-row items-center justify-center gap-2 shadow-lg shadow-primary/25"
+                      className="flex-1 bg-primary h-14 rounded-2xl shadow-lg shadow-primary/20"
                     >
                       {completingTaskId === focusTask._id ? (
                         <ActivityIndicator color="white" size="small" />
                       ) : (
-                        <>
+                        <View className="flex-row items-center gap-2">
                           <Icon as={CheckCircle2Icon} className="size-4 text-white" />
                           <Text className="text-white font-outfit-semibold text-sm">Complete</Text>
-                        </>
+                        </View>
                       )}
-                    </Pressable>
+                    </Button>
                   </View>
                 </View>
               </View>
             </Animated.View>
-          ) : (
-             <Animated.View 
-              entering={FadeInDown.delay(200).springify()}
-              className="mb-10 bg-white/5 border border-white/10 p-8 rounded-3xl items-center justify-center border-dashed"
+          ) : null}
+
+          {/* AI Suggestion (Bento Card) */}
+          {aiSuggestion && (
+            <Animated.View 
+              entering={FadeInDown.springify()}
+              className="mb-10"
             >
-              <Icon as={SparklesIcon} className="size-8 text-muted-foreground/30 mb-3" />
-              <Text className="text-muted-foreground font-outfit text-center">No focus set for today.{"\n"}Capture some thoughts to get started.</Text>
+              <Card className="bg-primary/5 border-primary/10 rounded-[32px] backdrop-blur-xl border-dashed">
+                <CardContent className="p-6">
+                  <View className="flex-row items-center justify-between mb-4">
+                    <View className="flex-row items-center gap-2">
+                      <View className="bg-primary/20 p-2 rounded-xl">
+                        <Icon as={SparklesIcon} className="size-4 text-primary" />
+                      </View>
+                      <Text className="text-primary font-outfit-bold text-[10px] uppercase tracking-widest">AI Strategist</Text>
+                    </View>
+                    <Pressable onPress={() => setAiSuggestion(null)} className="p-1 opacity-40">
+                      <Icon as={CheckIcon} className="size-4 text-foreground" />
+                    </Pressable>
+                  </View>
+                  <Text className="font-outfit text-foreground/80 leading-7 text-lg">{aiSuggestion}</Text>
+                </CardContent>
+              </Card>
             </Animated.View>
           )}
 
-          {/* Tasks List */}
+          {/* Upcoming List */}
           <View className="mb-12">
-            <Text className="font-outfit-bold text-lg mb-6 text-muted-foreground uppercase tracking-widest px-1">Upcoming</Text>
+            <View className="flex-row items-center justify-between mb-6 px-1">
+              <Text className="font-outfit-bold text-lg text-foreground tracking-tight">Upcoming Tasks</Text>
+              <Text className="text-primary font-outfit-medium text-xs">See All</Text>
+            </View>
+            
             {tasks === undefined ? (
               <View className="p-4 items-center">
-                 <ActivityIndicator color="#6366f1" />
+                 <ActivityIndicator color="#8B5CF6" />
               </View>
-            ) : pendingTasks.length === 0 ? (
-              <View className="p-8 items-center justify-center opacity-50">
-                 <Text className="text-muted-foreground font-outfit italic">Your schedule is clear.</Text>
+            ) : pendingTasks.length <= 1 && !focusTask ? (
+              <View className="bg-white/5 border border-white/5 rounded-[32px] p-10 items-center justify-center border-dashed">
+                 <Icon as={ZapIcon} className="size-8 text-muted-foreground/20 mb-3" />
+                 <Text className="text-muted-foreground font-outfit text-center italic">Your schedule is clear.</Text>
               </View>
             ) : (
-              pendingTasks.slice(1).map((task, index) => (
+              pendingTasks.slice(focusTask ? 1 : 0).map((task, index) => (
                 <Animated.View 
                   key={task._id}
                   entering={FadeInDown.delay(300 + index * 100).springify()}
                   exiting={FadeOutLeft}
-                  className="flex-row items-center gap-4 mb-3 bg-card/50 p-4 rounded-2xl border border-white/5 active:bg-white/5"
+                  layout={Layout.springify()}
+                  className="flex-row items-center gap-4 mb-3 bg-card/30 p-4 rounded-3xl border border-white/5 active:bg-white/5"
                 >
                   <Pressable 
                     onPress={() => handleCompleteTask(task._id)}
-                    className="size-6 rounded-full border-2 border-muted-foreground/30 items-center justify-center active:bg-primary/20 active:border-primary"
+                    className="size-7 rounded-full border-2 border-primary/30 items-center justify-center active:bg-primary/20 active:border-primary"
                   >
                   </Pressable>
                   <View className="flex-1">
                     <Text className="font-outfit-medium text-lg text-foreground/90 leading-6">{task.title}</Text>
                     {task.priority === 'high' && (
-                      <Text className="text-destructive font-outfit text-[10px] uppercase tracking-wider mt-1">Urgent</Text>
+                      <Badge variant="destructive" className="bg-destructive/10 border-none p-0 h-auto self-start mt-1">
+                        <Text className="text-destructive font-outfit-bold text-[8px] uppercase tracking-wider">Urgent</Text>
+                      </Badge>
                     )}
                   </View>
                 </Animated.View>
@@ -218,15 +287,15 @@ export default function DailyPlanScreen() {
             )}
           </View>
 
-          {/* Completed Tasks */}
+          {/* Completed Tasks (Minimalist) */}
           {completedTasks.length > 0 && (
             <View className="mb-12">
-              <Text className="font-outfit-bold text-xl mb-4 text-muted-foreground">Completed</Text>
+              <Text className="font-outfit-bold text-sm mb-4 text-muted-foreground uppercase tracking-widest px-1">Completed</Text>
               {completedTasks.map((task, index) => (
                 <Animated.View 
                   key={task._id}
                   entering={FadeInDown.delay(index * 50).springify()}
-                  className="flex-row items-center gap-4 mb-3 p-3 opacity-50"
+                  className="flex-row items-center gap-4 mb-2 p-2 opacity-30"
                 >
                   <Icon as={CheckIcon} className="size-5 text-emerald-500" />
                   <Text className="font-outfit text-base line-through text-muted-foreground">{task.title}</Text>
