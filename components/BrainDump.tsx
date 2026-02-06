@@ -5,6 +5,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { 
   FadeInDown, 
   FadeInUp,
+  FadeIn,
+  FadeOut,
   useAnimatedStyle, 
   useSharedValue, 
   withSpring,
@@ -12,7 +14,7 @@ import Animated, {
   withSequence,
   withTiming,
   interpolate,
-  Extrapolation
+  ZoomIn
 } from 'react-native-reanimated';
 import { Icon } from './ui/icon';
 import { Text } from './ui/text';
@@ -24,7 +26,8 @@ import {
   SendIcon,
   SparklesIcon,
   LinkIcon,
-  BrainIcon
+  BrainIcon,
+  CheckIcon
 } from 'lucide-react-native';
 import { intentParser, Intent } from '@/lib/ai/intent-parser';
 import * as Haptics from 'expo-haptics';
@@ -35,11 +38,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Clipboard from 'expo-clipboard';
 import { Badge } from '@/components/ui/badge';
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export function BrainDump() {
   const [text, setText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [intent, setIntent] = useState<Intent>('UNKNOWN');
   const [cleanedText, setCleanedText] = useState('');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
@@ -124,10 +128,19 @@ export function BrainDump() {
       });
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      
+      // Trigger success feedback loop
+      setShowSuccess(true);
       setText('');
       setIntent('UNKNOWN');
       setCleanedText('');
       glowOpacity.value = withTiming(0);
+
+      // Reset success message after delay
+      setTimeout(() => {
+        setShowSuccess(false);
+      }, 2500);
+
     } catch (error) {
       console.error("Failed to capture thought:", error);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -165,7 +178,8 @@ export function BrainDump() {
   return (
     <KeyboardAvoidingView 
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      className=\"flex-1\"
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+      className="flex-1"
     >
       {/* Dynamic Background */}
       <View className="absolute inset-0 overflow-hidden">
@@ -190,105 +204,126 @@ export function BrainDump() {
         />
       </View>
 
-      <SafeAreaView className="flex-1 px-6 justify-center">
-        
-        {/* The Monolith */}
-        <Animated.View 
-          entering={FadeInUp.springify()}
-          style={animatedContainerStyle}
-          className="relative"
-        >
-          {/* Main Card */}
-          <View className="bg-card/40 border-white/10 rounded-[40px] border backdrop-blur-[40px] shadow-2xl overflow-hidden">
-            <View className="p-8">
-              
-              {/* Intent Badge Reveal */}
-              <View className="flex-row items-center justify-between mb-6 h-8">
-                {badge ? (
-                  <Animated.View entering={FadeInDown.springify()}>
-                    <Badge variant="outline" className={`${badge.bg} border-transparent py-1.5 px-4`}>
-                      <Icon as={badge.icon} className={`size-3.5 mr-2 ${badge.color}`} />
-                      <Text className={`${badge.color} font-outfit-bold text-[10px] uppercase tracking-widest`}>
-                        {badge.label}
-                      </Text>
-                    </Badge>
-                  </Animated.View>
-                ) : (
-                  <View className="flex-row items-center gap-2 opacity-40">
-                    <Icon as={BrainIcon} className="text-white/50 size-4" />
-                    <Text className="text-white/50 font-outfit-medium text-[10px] uppercase tracking-widest">Awaiting Input</Text>
-                  </View>
-                )}
-
-                <View className="flex-row items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/5">
-                  <View className={`size-1.5 rounded-full ${aiStatus === 'LOCAL' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-primary'}`} />
-                  <Text className="font-outfit-bold text-[8px] text-white/40 uppercase tracking-tighter">
-                    {aiStatus === 'LOCAL' ? 'Neural Link active' : 'NLP Standard'}
-                  </Text>
+      <SafeAreaView className="flex-1 px-6">
+        <View className="flex-1 justify-center">
+          
+          {/* Success Overlay */}
+          {showSuccess && (
+            <Animated.View 
+              entering={FadeIn.duration(400)} 
+              exiting={FadeOut.duration(400)}
+              className="absolute inset-0 z-50 items-center justify-center"
+            >
+              <Animated.View 
+                entering={ZoomIn.springify()}
+                className="bg-emerald-500/20 border border-emerald-500/30 p-8 rounded-[40px] items-center backdrop-blur-3xl"
+              >
+                <View className="bg-emerald-500 p-4 rounded-full mb-4 shadow-lg shadow-emerald-500/50">
+                  <Icon as={CheckIcon} className="text-white size-8" strokeWidth={3} />
                 </View>
-              </View>
+                <Text className="text-white font-outfit-bold text-2xl tracking-tight">Captured to Tome</Text>
+                <Text className="text-emerald-400 font-outfit text-sm uppercase tracking-[3px] mt-2">Neural sync complete</Text>
+              </Animated.View>
+            </Animated.View>
+          )}
 
-              <TextInput
-                ref={inputRef}
-                multiline
-                placeholder="Unload your mind..."
-                placeholderTextColor="rgba(255,255,255,0.2)"
-                className="font-outfit text-foreground min-h-[160px] text-3xl leading-[42px] tracking-tighter"
-                value={text}
-                onChangeText={handleTextChange}
-                autoFocus
-                editable={!isProcessing}
-                selectionColor="#8B5CF6"
-              />
-
-              {/* Action Bar */}
-              <View className="flex-row items-center justify-between mt-8 pt-6 border-t border-white/5">
-                <View className="flex-row items-center gap-4">
-                  <Pressable 
-                    onPress={handlePasteLink}
-                    className="size-12 items-center justify-center rounded-2xl bg-white/5 active:bg-white/10 active:scale-90 transition-all border border-white/5"
-                  >
-                    <Icon as={LinkIcon} className="text-white/60 size-5" />
-                  </Pressable>
-                  <Pressable 
-                    onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-                    className="size-12 items-center justify-center rounded-2xl bg-white/5 active:bg-white/10 active:scale-90 transition-all border border-white/5"
-                  >
-                    <Icon as={MicIcon} className="text-white/60 size-5" />
-                  </Pressable>
-                </View>
-
-                <Pressable 
-                  disabled={isProcessing || text.length === 0}
-                  onPress={handleSubmit}
-                  className={`size-16 items-center justify-center rounded-[24px] shadow-2xl transition-all ${
-                    text.length > 0 ? 'bg-primary shadow-primary/40' : 'bg-white/5 border border-white/10'
-                  }`}
-                >
-                  {isProcessing ? (
-                    <ActivityIndicator color="white" />
+          {/* The Monolith */}
+          <Animated.View 
+            entering={FadeInUp.springify()}
+            style={animatedContainerStyle}
+            className="relative"
+          >
+            {/* Main Card */}
+            <View className="bg-card/40 border-white/10 rounded-[40px] border backdrop-blur-[40px] shadow-2xl overflow-hidden">
+              <View className="p-8">
+                
+                {/* Intent Badge Reveal */}
+                <View className="flex-row items-center justify-between mb-6 h-8">
+                  {badge ? (
+                    <Animated.View entering={FadeInDown.springify()}>
+                      <Badge variant="outline" className={`${badge.bg} border-transparent py-1.5 px-4`}>
+                        <Icon as={badge.icon} className={`size-3.5 mr-2 ${badge.color}`} />
+                        <Text className={`${badge.color} font-outfit-bold text-[10px] uppercase tracking-widest`}>
+                          {badge.label}
+                        </Text>
+                      </Badge>
+                    </Animated.View>
                   ) : (
-                    <Icon 
-                      as={text.length > 0 ? SendIcon : SparklesIcon} 
-                      className={`size-6 ${text.length > 0 ? 'text-white' : 'text-white/20'}`} 
-                    />
+                    <View className="flex-row items-center gap-2 opacity-40">
+                      <Icon as={BrainIcon} className="text-white/50 size-4" />
+                      <Text className="text-white/50 font-outfit-medium text-[10px] uppercase tracking-widest">Awaiting Input</Text>
+                    </View>
                   )}
-                </Pressable>
+
+                  <View className="flex-row items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/5">
+                    <View className={`size-1.5 rounded-full ${aiStatus === 'LOCAL' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-primary'}`} />
+                    <Text className="font-outfit-bold text-[8px] text-white/40 uppercase tracking-tighter">
+                      {aiStatus === 'LOCAL' ? 'Neural Link active' : 'NLP Standard'}
+                    </Text>
+                  </View>
+                </View>
+
+                <TextInput
+                  ref={inputRef}
+                  multiline
+                  placeholder="Unload your mind..."
+                  placeholderTextColor="rgba(255,255,255,0.2)"
+                  className="font-outfit text-foreground min-h-[160px] text-3xl leading-[42px] tracking-tighter"
+                  value={text}
+                  onChangeText={handleTextChange}
+                  autoFocus
+                  editable={!isProcessing}
+                  selectionColor="#8B5CF6"
+                />
+
+                {/* Action Bar */}
+                <View className="flex-row items-center justify-between mt-8 pt-6 border-t border-white/5">
+                  <View className="flex-row items-center gap-4">
+                    <Pressable 
+                      onPress={handlePasteLink}
+                      className="size-12 items-center justify-center rounded-2xl bg-white/5 active:bg-white/10 active:scale-90 transition-all border border-white/5"
+                    >
+                      <Icon as={LinkIcon} className="text-white/60 size-5" />
+                    </Pressable>
+                    <Pressable 
+                      onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+                      className="size-12 items-center justify-center rounded-2xl bg-white/5 active:bg-white/10 active:scale-90 transition-all border border-white/5"
+                    >
+                      <Icon as={MicIcon} className="text-white/60 size-5" />
+                    </Pressable>
+                  </View>
+
+                  <Pressable 
+                    disabled={isProcessing || text.length === 0}
+                    onPress={handleSubmit}
+                    className={`size-16 items-center justify-center rounded-[24px] shadow-2xl transition-all ${
+                      text.length > 0 ? 'bg-primary shadow-primary/40' : 'bg-white/5 border border-white/10'
+                    }`}
+                  >
+                    {isProcessing ? (
+                      <ActivityIndicator color="white" />
+                    ) : (
+                      <Icon 
+                        as={text.length > 0 ? SendIcon : SparklesIcon} 
+                        className={`size-6 ${text.length > 0 ? 'text-white' : 'text-white/20'}`} 
+                      />
+                    )}
+                  </Pressable>
+                </View>
               </View>
             </View>
-          </View>
 
-          {/* Hint */}
-          <Animated.View 
-            entering={FadeInDown.delay(1000)}
-            className="mt-8 items-center opacity-30"
-          >
-            <Text className="text-white text-[10px] font-outfit-medium uppercase tracking-[4px]">
-              Tap <Text className="font-outfit-bold">Send</Text> to archive to your Tome
-            </Text>
+            {/* Hint */}
+            <Animated.View 
+              entering={FadeInDown.delay(1000)}
+              className="mt-8 items-center opacity-30"
+            >
+              <Text className="text-white text-[10px] font-outfit-medium uppercase tracking-[4px]">
+                Tap <Text className="font-outfit-bold">Send</Text> to archive to your Tome
+              </Text>
+            </Animated.View>
           </Animated.View>
-        </Animated.View>
-
+        </View>
       </SafeAreaView>
     </KeyboardAvoidingView>
   );
