@@ -1,0 +1,219 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { View, TextInput, KeyboardAvoidingView, Platform, Pressable, ActivityIndicator } from 'react-native';
+import Animated, { 
+  FadeInDown, 
+  FadeOutUp, 
+  useAnimatedStyle, 
+  useSharedValue, 
+  withSpring 
+} from 'react-native-reanimated';
+import { Icon } from './ui/icon';
+import { Text } from './ui/text';
+import { 
+  CalendarIcon, 
+  CheckCircle2Icon, 
+  FileTextIcon, 
+  MicIcon, 
+  SendIcon,
+  SparklesIcon
+} from 'lucide-react-native';
+import { AIBorderGlow } from './AIBorderGlow';
+import { intentParser, Intent } from '@/lib/ai/intent-parser';
+import * as Haptics from 'expo-haptics';
+import { useMutation } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+
+import { modelManager } from '@/lib/ai/model-manager';
+
+export function BrainDump() {
+  const [text, setText] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [intent, setIntent] = useState<Intent>('UNKNOWN');
+  const [cleanedText, setCleanedText] = useState('');
+  const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
+  const [aiStatus, setAiStatus] = useState<'LOCAL' | 'FALLBACK'>('FALLBACK');
+  const inputRef = useRef<TextInput>(null);
+
+  const captureThought = useMutation(api.brainDump.capture);
+
+  useEffect(() => {
+    // Check AI status and update UI
+    const checkStatus = () => {
+      setAiStatus(modelManager.status);
+    };
+    
+    checkStatus();
+    const interval = setInterval(checkStatus, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const scale = useSharedValue(1);
+
+  const handleTextChange = async (val: string) => {
+    setText(val);
+    if (val.length > 3) {
+      const result = await intentParser.parse(val);
+      setCleanedText(result.cleanedText);
+      setPriority(result.priority);
+      if (result.intent !== intent) {
+        setIntent(result.intent);
+        if (result.intent !== 'UNKNOWN') {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
+      }
+    } else {
+      setIntent('UNKNOWN');
+      setCleanedText(val);
+      setPriority('medium');
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (text.trim().length === 0 || isProcessing) return;
+
+    setIsProcessing(true);
+    try {
+      await captureThought({
+        content: text,
+        intent: intent,
+        cleanedText: cleanedText || text,
+        priority: priority,
+      });
+
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setText('');
+      setIntent('UNKNOWN');
+      setCleanedText('');
+    } catch (error) {
+      console.error("Failed to capture thought:", error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const animatedInputStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: scale.value }],
+    };
+  });
+
+  const onFocus = () => {
+    scale.value = withSpring(1.02);
+  };
+
+  const onBlur = () => {
+    scale.value = withSpring(1);
+  };
+
+  const getBadgeConfig = (intent: Intent) => {
+    switch (intent) {
+      case 'TASK':
+        return { label: 'Task', icon: CheckCircle2Icon, color: 'text-indigo-400', bg: 'bg-indigo-400/10' };
+      case 'EVENT':
+        return { label: 'Event', icon: CalendarIcon, color: 'text-amber-400', bg: 'bg-amber-400/10' };
+      case 'NOTE':
+        return { label: 'Note', icon: FileTextIcon, color: 'text-emerald-400', bg: 'bg-emerald-400/10' };
+      default:
+        return null;
+    }
+  };
+
+  const badge = getBadgeConfig(intent);
+
+  return (
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      className="flex-1 justify-end p-6"
+    >
+      <Animated.View 
+        entering={FadeInDown.delay(200).springify()}
+        style={animatedInputStyle}
+        className="relative mb-8"
+      >
+        <AIBorderGlow active={text.length > 0} />
+        
+        <View className="bg-background/80 border-border/50 overflow-hidden rounded-2xl border backdrop-blur-xl">
+          <View className="flex-row items-center p-4">
+            <View className="flex-1">
+              <TextInput
+                ref={inputRef}
+                multiline
+                placeholder="What's on your mind?"
+                placeholderTextColor="#666"
+                className="font-outfit text-foreground min-h-[100px] text-lg leading-6"
+                value={text}
+                onChangeText={handleTextChange}
+                onFocus={onFocus}
+                onBlur={onBlur}
+                autoFocus
+                editable={!isProcessing}
+              />
+            </View>
+          </View>
+
+          <View className="border-border/10 flex-row items-center justify-between border-t bg-black/5 p-3">
+            <View className="flex-row items-center gap-2">
+              <Pressable className="active:scale-95 h-10 w-10 items-center justify-center rounded-full bg-white/5">
+                <Icon as={MicIcon} className="text-muted-foreground size-5" />
+              </Pressable>
+              
+              <View className="h-4 w-px bg-white/10 mx-1" />
+
+              <View className="flex-row items-center gap-1.5 px-2 py-1 rounded-md bg-white/5">
+                <View className={`size-1.5 rounded-full ${aiStatus === 'LOCAL' ? 'bg-emerald-500' : 'bg-indigo-400'}`} />
+                <Text className="font-outfit text-[10px] text-muted-foreground uppercase tracking-tighter">
+                  {aiStatus === 'LOCAL' ? 'On-Device AI (LiteRT)' : 'Local NLP (Compromise)'}
+                </Text>
+              </View>
+              
+              {badge && (
+                <View className="flex-row items-center gap-2">
+                  <Animated.View 
+                    entering={FadeInDown.springify()}
+                    className={`flex-row items-center gap-1.5 px-3 py-1.5 rounded-full ${badge.bg}`}
+                  >
+                    <Icon as={badge.icon} className={`size-3.5 ${badge.color}`} />
+                    <Text className={`font-outfit-medium text-xs ${badge.color}`}>
+                      {badge.label}
+                    </Text>
+                  </Animated.View>
+                  
+                  {priority === 'high' && (
+                    <Animated.View 
+                      entering={FadeInDown.delay(100).springify()}
+                      className="bg-rose-500/10 px-2 py-1 rounded-md"
+                    >
+                      <Text className="text-rose-400 font-outfit-bold text-[10px] uppercase">Urgent</Text>
+                    </Animated.View>
+                  )}
+                </View>
+              )}
+            </View>
+
+            <Pressable 
+              disabled={isProcessing || text.length === 0}
+              className={`h-10 w-10 items-center justify-center rounded-full transition-colors ${text.length > 0 ? 'bg-indigo-500' : 'bg-white/5'}`}
+              onPress={handleSubmit}
+            >
+              {isProcessing ? (
+                <ActivityIndicator color="white" size="small" />
+              ) : (
+                <Icon 
+                  as={text.length > 0 ? SendIcon : SparklesIcon} 
+                  className={`size-5 ${text.length > 0 ? 'text-white' : 'text-muted-foreground'}`} 
+                />
+              )}
+            </Pressable>
+          </View>
+        </View>
+        
+        <Animated.View className="mt-4 flex-row justify-center opacity-40">
+           <Text className="font-outfit text-xs text-muted-foreground">
+             Press <Text className="font-outfit-bold">Send</Text> to capture to your Tome
+           </Text>
+        </Animated.View>
+      </Animated.View>
+    </KeyboardAvoidingView>
+  );
+}
