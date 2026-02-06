@@ -15,15 +15,16 @@ import {
   FileTextIcon, 
   MicIcon, 
   SendIcon,
-  SparklesIcon
+  SparklesIcon,
+  LinkIcon
 } from 'lucide-react-native';
 import { AIBorderGlow } from './AIBorderGlow';
 import { intentParser, Intent } from '@/lib/ai/intent-parser';
 import * as Haptics from 'expo-haptics';
-import { useMutation } from 'convex/react';
+import { useMutation, useAction } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-
 import { modelManager } from '@/lib/ai/model-manager';
+import * as Clipboard from 'expo-clipboard';
 
 export function BrainDump() {
   const [text, setText] = useState('');
@@ -35,6 +36,7 @@ export function BrainDump() {
   const inputRef = useRef<TextInput>(null);
 
   const captureThought = useMutation(api.brainDump.capture);
+  const summarizeUrl = useAction(api.scraper.summarizeUrl);
 
   useEffect(() => {
     // Check AI status and update UI
@@ -68,16 +70,34 @@ export function BrainDump() {
     }
   };
 
+  const handlePasteLink = async () => {
+    const content = await Clipboard.getStringAsync();
+    const isUrl = content.startsWith('http');
+    
+    if (isUrl) {
+      handleTextChange(content);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+  };
+
   const handleSubmit = async () => {
     if (text.trim().length === 0 || isProcessing) return;
 
     setIsProcessing(true);
     try {
+      const isUrl = text.trim().startsWith('http');
+      let summary = undefined;
+
+      if (isUrl) {
+        summary = await summarizeUrl({ url: text.trim() });
+      }
+
       await captureThought({
         content: text,
-        intent: intent,
+        intent: isUrl ? 'NOTE' : intent,
         cleanedText: cleanedText || text,
         priority: priority,
+        summary: summary,
       });
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -154,8 +174,18 @@ export function BrainDump() {
 
           <View className="border-border/10 flex-row items-center justify-between border-t bg-black/5 p-3">
             <View className="flex-row items-center gap-2">
-              <Pressable className="active:scale-95 h-10 w-10 items-center justify-center rounded-full bg-white/5">
+              <Pressable 
+                onPress={() => {/* Voice placeholder */}}
+                className="active:scale-95 h-10 w-10 items-center justify-center rounded-full bg-white/5"
+              >
                 <Icon as={MicIcon} className="text-muted-foreground size-5" />
+              </Pressable>
+
+              <Pressable 
+                onPress={handlePasteLink}
+                className="active:scale-95 h-10 w-10 items-center justify-center rounded-full bg-white/5"
+              >
+                <Icon as={LinkIcon} className="text-muted-foreground size-5" />
               </Pressable>
               
               <View className="h-4 w-px bg-white/10 mx-1" />
