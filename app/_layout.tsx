@@ -20,6 +20,7 @@ import {
 } from '@expo-google-fonts/outfit';
 import { useEffect } from 'react';
 import { tokenCache } from '@/lib/auth';
+import { ShareHandler } from '@/components/ShareHandler';
 
 const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
@@ -62,6 +63,7 @@ export default function RootLayout() {
           <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
           <Stack />
           <PortalHost />
+          <ShareHandler />
         </ThemeProvider>
       </ConvexProviderWithClerk>
     </ClerkProvider>
