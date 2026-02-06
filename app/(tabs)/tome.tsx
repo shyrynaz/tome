@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
-import { View, SafeAreaView, ScrollView, TextInput, Pressable, FlatList } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, SafeAreaView, ScrollView, TextInput, Pressable, Dimensions } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { useUniwind } from 'uniwind';
 import { LinearGradient } from 'expo-linear-gradient';
 import { 
   SearchIcon, 
@@ -14,10 +13,12 @@ import {
   SparklesIcon,
   MessageSquareIcon,
   CheckCircle2Icon,
-  CalendarIcon
+  CalendarIcon,
+  LinkIcon,
+  QuoteIcon
 } from 'lucide-react-native';
 import { Icon } from '@/components/ui/icon';
-import Animated, { FadeInDown, Layout } from 'react-native-reanimated';
+import Animated, { FadeInDown, Layout, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 
 const CATEGORIES = [
   { id: 'all', label: 'All', icon: LibraryIcon },
@@ -26,8 +27,55 @@ const CATEGORIES = [
   { id: 'EVENT', label: 'Events', icon: CalendarIcon },
 ];
 
+const MasonryColumn = ({ data, columnIndex }) => {
+  return (
+    <View className="flex-1 gap-4">
+      {data.map((item, index) => (
+        <Animated.View 
+          key={item._id}
+          entering={FadeInDown.delay((columnIndex * 100) + (index * 50)).springify()}
+          layout={Layout.springify()}
+          className={`bg-card/40 border-white/5 rounded-[24px] overflow-hidden border backdrop-blur-md ${item.intent === 'NOTE' ? 'bg-purple-500/5' : ''}`}
+        >
+          <Pressable className="p-4 active:bg-white/5">
+            {/* Header */}
+            <View className="flex-row items-center justify-between mb-3">
+              <View className="flex-row items-center gap-1.5 bg-white/5 px-2 py-1 rounded-full">
+                <Icon 
+                  as={CATEGORIES.find(c => c.id === item.intent)?.icon || LibraryIcon} 
+                  className={`size-3 ${item.intent === 'TASK' ? 'text-amber-400' : 'text-purple-400'}`} 
+                />
+                <Text className="text-muted-foreground font-outfit-medium text-[10px] uppercase tracking-wider">
+                  {item.intent || 'Note'}
+                </Text>
+              </View>
+              {item.summary && (
+                <View className="bg-primary/10 p-1 rounded-full">
+                  <Icon as={SparklesIcon} className="size-3 text-primary" />
+                </View>
+              )}
+            </View>
+
+            {/* Content */}
+            <Text className="font-outfit text-base leading-6 text-foreground/90 mb-2" numberOfLines={item.summary ? 4 : 6}>
+              {item.summary || item.content}
+            </Text>
+
+            {/* Footer */}
+            <View className="mt-2 flex-row items-center justify-between opacity-50">
+              <Text className="font-outfit text-[10px] text-muted-foreground">
+                {new Date(item._creationTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+              </Text>
+              {item.content.includes('http') && <Icon as={LinkIcon} className="size-3 text-muted-foreground" />}
+            </View>
+          </Pressable>
+        </Animated.View>
+      ))}
+    </View>
+  );
+};
+
 export default function TomeScreen() {
-  const { theme } = useUniwind();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
   
@@ -36,50 +84,70 @@ export default function TomeScreen() {
     intent: activeCategory
   });
 
-  // For this demo, let's just show all and handle filtering if we add the field.
-  // Actually, I'll just use the list for now.
+  const columns = useMemo(() => {
+    if (!ideas) return [[], []];
+    const col1 = [];
+    const col2 = [];
+    ideas.forEach((item, i) => {
+      if (i % 2 === 0) col1.push(item);
+      else col2.push(item);
+    });
+    return [col1, col2];
+  }, [ideas]);
 
   return (
     <View className="flex-1 bg-background">
       <LinearGradient
-        colors={['rgba(168, 85, 247, 0.05)', 'transparent', 'transparent']}
+        colors={['rgba(76, 29, 149, 0.15)', 'transparent', 'transparent']}
         className="absolute inset-0"
+        pointerEvents="none"
       />
       
       <SafeAreaView className="flex-1">
-        <View className="px-6 pt-4 pb-2">
-          <Text className="font-outfit-bold text-4xl tracking-tighter">The Tome</Text>
-          <Text className="text-muted-foreground font-outfit text-sm">Your collective intelligence</Text>
+        {/* Header */}
+        <View className="px-6 pt-4 pb-4">
+          <View className="flex-row items-center justify-between mb-1">
+            <Text className="font-outfit-bold text-4xl tracking-tighter text-foreground">The Tome</Text>
+            <View className="bg-white/5 p-2 rounded-full border border-white/5">
+               <Icon as={ClockIcon} className="size-5 text-muted-foreground" />
+            </View>
+          </View>
+          <Text className="text-muted-foreground font-outfit text-sm tracking-wide opacity-70">Collective Intelligence Archive</Text>
         </View>
 
-        {/* Search Bar */}
-        <View className="px-6 py-4">
-          <View className="bg-white/5 border border-white/10 rounded-2xl flex-row items-center px-4 h-12">
-            <Icon as={SearchIcon} className="size-4 text-muted-foreground mr-3" />
+        {/* Floating Search Bar */}
+        <View className="px-6 mb-6">
+          <View className="bg-card/50 border border-white/10 rounded-[20px] flex-row items-center px-4 h-14 backdrop-blur-xl shadow-lg shadow-black/20">
+            <Icon as={SearchIcon} className="size-5 text-muted-foreground mr-3" />
             <TextInput
-              placeholder="Search your thoughts..."
-              placeholderTextColor="#666"
-              className="flex-1 font-outfit text-foreground text-base"
+              placeholder="Ask your archive..."
+              placeholderTextColor="rgba(255,255,255,0.4)"
+              className="flex-1 font-outfit text-foreground text-lg"
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
+            {searchQuery.length > 0 && (
+              <Pressable onPress={() => setSearchQuery('')} className="bg-white/10 p-1 rounded-full">
+                <Icon as={ChevronRightIcon} className="size-4 text-muted-foreground" />
+              </Pressable>
+            )}
           </View>
         </View>
 
-        {/* Categories */}
-        <View className="mb-4">
+        {/* Categories (Horizontal Scroll) */}
+        <View className="mb-6 h-10">
           <ScrollView 
             horizontal 
             showsHorizontalScrollIndicator={false} 
-            contentContainerStyle={{ paddingHorizontal: 24, gap: 10 }}
+            contentContainerStyle={{ paddingHorizontal: 24, gap: 8 }}
           >
             {CATEGORIES.map((cat) => (
               <Pressable
                 key={cat.id}
                 onPress={() => setActiveCategory(cat.id)}
-                className={`flex-row items-center gap-2 px-4 py-2 rounded-full border ${
+                className={`flex-row items-center gap-2 px-4 py-2 rounded-full border transition-all ${
                   activeCategory === cat.id 
-                    ? 'bg-purple-500 border-purple-500' 
+                    ? 'bg-primary border-primary shadow-lg shadow-primary/20' 
                     : 'bg-white/5 border-white/10'
                 }`}
               >
@@ -97,72 +165,28 @@ export default function TomeScreen() {
           </ScrollView>
         </View>
 
-        {/* Ideas List */}
-        {ideas === undefined ? (
-          <View className="flex-1 items-center justify-center">
-            <Text className="text-muted-foreground font-outfit italic">Unrolling the scrolls...</Text>
-          </View>
-        ) : ideas.length === 0 ? (
-          <View className="flex-1 items-center justify-center px-12">
-            <Icon as={SparklesIcon} className="size-12 text-muted-foreground/20 mb-4" />
-            <Text className="text-muted-foreground font-outfit text-center">
-              No memories found. Start dumping your thoughts to fill the Tome.
-            </Text>
-          </View>
-        ) : (
-          <FlatList
-            data={ideas}
-            keyExtractor={(item) => item._id}
-            contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40 }}
-            renderItem={({ item, index }) => (
-              <Animated.View 
-                entering={FadeInDown.delay(index * 50).springify()}
-                layout={Layout.springify()}
-                className="mb-4 bg-white/5 border border-white/5 rounded-2xl overflow-hidden"
-              >
-                <Pressable className="p-4 active:bg-white/10">
-                  <View className="flex-row items-center justify-between mb-2">
-                    <View className="flex-row items-center gap-2">
-                      {item.intent && (
-                         <Icon 
-                          as={CATEGORIES.find(c => c.id === item.intent)?.icon || LibraryIcon} 
-                          className="size-3 text-muted-foreground" 
-                        />
-                      )}
-                      <Text className="text-muted-foreground font-outfit text-[10px] uppercase tracking-wider">
-                        {new Date(item._creationTime).toLocaleDateString()}
-                      </Text>
-                    </View>
-                    {item.processed && (
-                      <View className="bg-indigo-500/10 px-2 py-0.5 rounded-md">
-                        <Text className="text-indigo-400 font-outfit-bold text-[8px] uppercase tracking-tighter">Processed</Text>
-                      </View>
-                    )}
-                  </View>
-                  <Text className="font-outfit text-base leading-6 text-foreground/90" numberOfLines={3}>
-                    {item.content}
-                  </Text>
-                  
-                  {item.summary && (
-                    <View className="mt-3 bg-indigo-500/5 border border-indigo-500/10 p-3 rounded-xl">
-                      <View className="flex-row items-center gap-2 mb-1">
-                        <Icon as={SparklesIcon} className="size-3 text-indigo-400" />
-                        <Text className="text-indigo-400 font-outfit-bold text-[10px] uppercase tracking-wider">AI Summary</Text>
-                      </View>
-                      <Text className="font-outfit text-xs text-muted-foreground leading-5">
-                        {item.summary}
-                      </Text>
-                    </View>
-                  )}
-                  
-                  <View className="mt-3 flex-row items-center justify-end">
-                    <Icon as={ChevronRightIcon} className="size-4 text-muted-foreground/30" />
-                  </View>
-                </Pressable>
-              </Animated.View>
-            )}
-          />
-        )}
+        {/* Masonry Grid */}
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100 }}>
+          {ideas === undefined ? (
+             <View className="mt-20 items-center">
+               <Text className="text-muted-foreground font-outfit italic">Unrolling scrolls...</Text>
+             </View>
+          ) : ideas.length === 0 ? (
+            <View className="mt-20 items-center justify-center px-10">
+              <View className="bg-white/5 p-6 rounded-full mb-6">
+                 <Icon as={SparklesIcon} className="size-10 text-muted-foreground/30" />
+              </View>
+              <Text className="text-muted-foreground font-outfit text-center text-lg leading-7">
+                Your tome is empty.<br/>Capture a thought to begin your legacy.
+              </Text>
+            </View>
+          ) : (
+            <View className="flex-row gap-4">
+              <MasonryColumn data={columns[0]} columnIndex={0} />
+              <MasonryColumn data={columns[1]} columnIndex={1} />
+            </View>
+          )}
+        </ScrollView>
       </SafeAreaView>
     </View>
   );
