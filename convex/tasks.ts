@@ -15,6 +15,32 @@ export const list = query({
   },
 });
 
+export const updateStatus = mutation({
+  args: {
+    taskId: v.id("tasks"),
+    status: v.union(
+      v.literal("todo"),
+      v.literal("in-progress"),
+      v.literal("done"),
+      v.literal("archived")
+    ),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+    
+    const task = await ctx.db.get(args.taskId);
+    if (!task || task.userId !== identity.subject) {
+      throw new Error("Task not found");
+    }
+    
+    await ctx.db.patch(args.taskId, { status: args.status });
+    return args.taskId;
+  },
+});
+
 export const create = mutation({
   args: {
     title: v.string(),
