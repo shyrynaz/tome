@@ -92,19 +92,23 @@ export default function DailyPlanScreen() {
           {aiSuggestion && (
             <Animated.View 
               entering={FadeInDown.springify()}
-              className="mb-8 bg-purple-500/10 border border-purple-500/20 p-5 rounded-3xl"
+              className="mb-8 bg-card border border-white/5 p-6 rounded-3xl shadow-2xl shadow-indigo-500/10"
             >
-              <View className="flex-row items-center gap-2 mb-3">
-                <Icon as={SparklesIcon} className="size-4 text-purple-400" />
-                <Text className="text-purple-400 font-outfit-semibold text-xs uppercase tracking-wider">AI Strategist</Text>
+              <View className="flex-row items-center justify-between mb-4">
+                <View className="flex-row items-center gap-2">
+                  <View className="bg-primary/10 p-2 rounded-xl">
+                    <Icon as={SparklesIcon} className="size-4 text-primary" />
+                  </View>
+                  <Text className="text-primary font-outfit-bold text-xs uppercase tracking-widest">AI Strategist</Text>
+                </View>
+                <Pressable 
+                  onPress={() => setAiSuggestion(null)}
+                  className="bg-white/5 px-3 py-1.5 rounded-full"
+                >
+                  <Text className="text-muted-foreground font-outfit-medium text-[10px] uppercase tracking-wider">Dismiss</Text>
+                </Pressable>
               </View>
-              <Text className="font-outfit text-foreground/90 leading-6">{aiSuggestion}</Text>
-              <Pressable 
-                onPress={() => setAiSuggestion(null)}
-                className="mt-4 self-end"
-              >
-                <Text className="text-muted-foreground font-outfit-medium text-xs">Dismiss</Text>
-              </Pressable>
+              <Text className="font-outfit text-foreground/90 leading-7 text-lg">{aiSuggestion}</Text>
             </Animated.View>
           )}
 
@@ -112,35 +116,52 @@ export default function DailyPlanScreen() {
           {focusTask ? (
             <Animated.View 
               entering={FadeInDown.delay(200).springify()}
-              className="mb-10 bg-indigo-500/10 border border-indigo-500/20 p-6 rounded-3xl"
+              className="mb-10"
             >
-              <View className="flex-row items-center gap-2 mb-3">
-                <Icon as={TrophyIcon} className="size-4 text-indigo-400" />
-                <Text className="text-indigo-400 font-outfit-semibold text-xs uppercase tracking-wider">Current Focus</Text>
-              </View>
-              <Text className="font-outfit-bold text-2xl leading-8 mb-4">{focusTask.title}</Text>
-              <View className="flex-row gap-3">
-                <Pressable 
-                  onPress={() => setShowFocusMode(true)}
-                  className="bg-white/10 self-start px-5 py-2.5 rounded-full flex-row items-center gap-2"
-                >
-                  <Icon as={TrophyIcon} className="size-4 text-indigo-400" />
-                  <Text className="text-indigo-400 font-outfit-semibold text-sm">Focus</Text>
-                </Pressable>
-                <Pressable 
-                  onPress={() => handleCompleteTask(focusTask._id)}
-                  disabled={completingTaskId === focusTask._id}
-                  className="bg-indigo-500 self-start px-5 py-2.5 rounded-full flex-row items-center gap-2"
-                >
-                  {completingTaskId === focusTask._id ? (
-                    <ActivityIndicator color="white" size="small" />
-                  ) : (
-                    <>
-                      <Icon as={CheckCircle2Icon} className="size-4 text-white" />
-                      <Text className="text-white font-outfit-semibold text-sm">Complete</Text>
-                    </>
-                  )}
-                </Pressable>
+              <View className="bg-card border border-white/10 p-1 rounded-[32px]">
+                <View className="bg-white/5 p-6 rounded-[28px] overflow-hidden relative">
+                   {/* Simulated Glow */}
+                   <View className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-3xl -mr-16 -mt-16 rounded-full" />
+                   
+                  <View className="flex-row items-center justify-between mb-6">
+                    <View className="flex-row items-center gap-2">
+                      <Icon as={TrophyIcon} className="size-4 text-primary" />
+                      <Text className="text-primary font-outfit-bold text-xs uppercase tracking-widest">Current Focus</Text>
+                    </View>
+                    {focusTask.priority === 'high' && (
+                       <View className="bg-destructive/10 px-3 py-1 rounded-full border border-destructive/20">
+                          <Text className="text-destructive font-outfit-bold text-[10px] uppercase tracking-wider">Urgent</Text>
+                       </View>
+                    )}
+                  </View>
+                  
+                  <Text className="font-outfit-bold text-3xl leading-9 mb-8 text-foreground tracking-tight">{focusTask.title}</Text>
+                  
+                  <View className="flex-row gap-3">
+                    <Pressable 
+                      onPress={() => setShowFocusMode(true)}
+                      className="bg-white/5 active:bg-white/10 flex-1 py-4 rounded-2xl flex-row items-center justify-center gap-2 border border-white/5"
+                    >
+                      <Icon as={TrophyIcon} className="size-4 text-muted-foreground" />
+                      <Text className="text-muted-foreground font-outfit-semibold text-sm">Focus Mode</Text>
+                    </Pressable>
+                    
+                    <Pressable 
+                      onPress={() => handleCompleteTask(focusTask._id)}
+                      disabled={completingTaskId === focusTask._id}
+                      className="bg-primary active:bg-primary/90 flex-1 py-4 rounded-2xl flex-row items-center justify-center gap-2 shadow-lg shadow-indigo-500/20"
+                    >
+                      {completingTaskId === focusTask._id ? (
+                        <ActivityIndicator color="white" size="small" />
+                      ) : (
+                        <>
+                          <Icon as={CheckCircle2Icon} className="size-4 text-white" />
+                          <Text className="text-white font-outfit-semibold text-sm">Complete</Text>
+                        </>
+                      )}
+                    </Pressable>
+                  </View>
+                </View>
               </View>
             </Animated.View>
           ) : (
@@ -155,29 +176,32 @@ export default function DailyPlanScreen() {
 
           {/* Tasks List */}
           <View className="mb-12">
-            <Text className="font-outfit-bold text-xl mb-4">Upcoming</Text>
+            <Text className="font-outfit-bold text-lg mb-6 text-muted-foreground uppercase tracking-widest px-1">Upcoming</Text>
             {tasks === undefined ? (
-              <Text className="text-muted-foreground italic">Loading your plan...</Text>
+              <View className="p-4 items-center">
+                 <ActivityIndicator color="#6366f1" />
+              </View>
             ) : pendingTasks.length === 0 ? (
-              <Text className="text-muted-foreground italic">All caught up!</Text>
+              <View className="p-8 items-center justify-center opacity-50">
+                 <Text className="text-muted-foreground font-outfit italic">Your schedule is clear.</Text>
+              </View>
             ) : (
               pendingTasks.slice(1).map((task, index) => (
                 <Animated.View 
                   key={task._id}
                   entering={FadeInDown.delay(300 + index * 100).springify()}
                   exiting={FadeOutLeft}
-                  className="flex-row items-center gap-4 mb-4 bg-white/5 p-4 rounded-2xl border border-white/5"
+                  className="flex-row items-center gap-4 mb-3 bg-card/50 p-4 rounded-2xl border border-white/5 active:bg-white/5"
                 >
                   <Pressable 
                     onPress={() => handleCompleteTask(task._id)}
-                    className="active:scale-90"
+                    className="size-6 rounded-full border-2 border-muted-foreground/30 items-center justify-center active:bg-primary/20 active:border-primary"
                   >
-                    <Icon as={CircleIcon} className="size-6 text-muted-foreground/50" />
                   </Pressable>
                   <View className="flex-1">
-                    <Text className="font-outfit-medium text-lg">{task.title}</Text>
+                    <Text className="font-outfit-medium text-lg text-foreground/90 leading-6">{task.title}</Text>
                     {task.priority === 'high' && (
-                      <Text className="text-rose-400 font-outfit text-xs uppercase">High Priority</Text>
+                      <Text className="text-destructive font-outfit text-[10px] uppercase tracking-wider mt-1">Urgent</Text>
                     )}
                   </View>
                 </Animated.View>

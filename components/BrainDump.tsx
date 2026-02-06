@@ -153,7 +153,7 @@ export function BrainDump() {
       >
         <AIBorderGlow active={text.length > 0} />
         
-        <View className="bg-background/80 border-border/50 overflow-hidden rounded-2xl border backdrop-blur-xl">
+        <View className="bg-card border-white/10 overflow-hidden rounded-2xl border backdrop-blur-xl shadow-2xl shadow-black/50">
           <View className="flex-row items-center p-4">
             <View className="flex-1">
               <TextInput
@@ -161,7 +161,7 @@ export function BrainDump() {
                 multiline
                 placeholder="What's on your mind?"
                 placeholderTextColor="#666"
-                className="font-outfit text-foreground min-h-[100px] text-lg leading-6"
+                className="font-outfit text-foreground min-h-[100px] text-lg leading-7 tracking-tight"
                 value={text}
                 onChangeText={handleTextChange}
                 onFocus={onFocus}
@@ -172,18 +172,18 @@ export function BrainDump() {
             </View>
           </View>
 
-          <View className="border-border/10 flex-row items-center justify-between border-t bg-black/5 p-3">
+          <View className="border-white/5 flex-row items-center justify-between border-t bg-white/[0.02] p-3">
             <View className="flex-row items-center gap-2">
               <Pressable 
                 onPress={() => {/* Voice placeholder */}}
-                className="active:scale-95 h-10 w-10 items-center justify-center rounded-full bg-white/5"
+                className="active:scale-95 h-10 w-10 items-center justify-center rounded-full bg-white/5 hover:bg-white/10"
               >
                 <Icon as={MicIcon} className="text-muted-foreground size-5" />
               </Pressable>
 
               <Pressable 
                 onPress={handlePasteLink}
-                className="active:scale-95 h-10 w-10 items-center justify-center rounded-full bg-white/5"
+                className="active:scale-95 h-10 w-10 items-center justify-center rounded-full bg-white/5 hover:bg-white/10"
               >
                 <Icon as={LinkIcon} className="text-muted-foreground size-5" />
               </Pressable>
@@ -191,9 +191,9 @@ export function BrainDump() {
               <View className="h-4 w-px bg-white/10 mx-1" />
 
               <View className="flex-row items-center gap-1.5 px-2 py-1 rounded-md bg-white/5">
-                <View className={`size-1.5 rounded-full ${aiStatus === 'LOCAL' ? 'bg-emerald-500' : 'bg-indigo-400'}`} />
+                <View className={`size-1.5 rounded-full ${aiStatus === 'LOCAL' ? 'bg-emerald-500' : 'bg-primary'}`} />
                 <Text className="font-outfit text-[10px] text-muted-foreground uppercase tracking-tighter">
-                  {aiStatus === 'LOCAL' ? 'On-Device AI (LiteRT)' : 'Local NLP (Compromise)'}
+                  {aiStatus === 'LOCAL' ? 'On-Device AI' : 'Local NLP'}
                 </Text>
               </View>
               
@@ -212,9 +212,9 @@ export function BrainDump() {
                   {priority === 'high' && (
                     <Animated.View 
                       entering={FadeInDown.delay(100).springify()}
-                      className="bg-rose-500/10 px-2 py-1 rounded-md"
+                      className="bg-destructive/10 px-2 py-1 rounded-md"
                     >
-                      <Text className="text-rose-400 font-outfit-bold text-[10px] uppercase">Urgent</Text>
+                      <Text className="text-destructive font-outfit-bold text-[10px] uppercase">Urgent</Text>
                     </Animated.View>
                   )}
                 </View>
@@ -223,7 +223,7 @@ export function BrainDump() {
 
             <Pressable 
               disabled={isProcessing || text.length === 0}
-              className={`h-10 w-10 items-center justify-center rounded-full transition-colors ${text.length > 0 ? 'bg-indigo-500' : 'bg-white/5'}`}
+              className={`h-10 w-10 items-center justify-center rounded-full transition-colors ${text.length > 0 ? 'bg-primary shadow-lg shadow-indigo-500/20' : 'bg-white/5'}`}
               onPress={handleSubmit}
             >
               {isProcessing ? (

@@ -14,18 +14,22 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: theme === 'dark' ? '#0A0A0A' : '#FFFFFF',
-          borderTopWidth: 0,
+          backgroundColor: theme === 'dark' ? '#0D0D12' : '#FFFFFF',
+          borderTopColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+          borderTopWidth: 1,
           elevation: 0,
           height: 85,
           paddingBottom: 25,
           paddingTop: 10,
         },
-        tabBarActiveTintColor: theme === 'dark' ? '#6366f1' : colors.primary,
-        tabBarInactiveTintColor: '#666',
+        tabBarActiveTintColor: theme === 'dark' ? '#5655D9' : colors.primary,
+        tabBarInactiveTintColor: theme === 'dark' ? '#4A4A55' : '#666',
         tabBarLabelStyle: {
           fontFamily: 'Outfit_500Medium',
-          fontSize: 12,
+          fontSize: 10,
+          marginTop: 4,
+          letterSpacing: 0.5,
+          textTransform: 'uppercase',
         },
       }}
     >
