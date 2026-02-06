@@ -1,22 +1,25 @@
 import { View, SafeAreaView, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { Text } from '@/components/ui/text';
-import { useQuery, useAction } from 'convex/react';
+import { useQuery, useAction, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useUniwind } from 'uniwind';
 import { LinearGradient } from 'expo-linear-gradient';
-import { CheckCircle2Icon, CircleIcon, SparklesIcon, TrophyIcon, BrainCircuitIcon } from 'lucide-react-native';
+import { CheckCircle2Icon, CircleIcon, SparklesIcon, TrophyIcon, BrainCircuitIcon, CheckIcon } from 'lucide-react-native';
 import { Icon } from '@/components/ui/icon';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeOutLeft } from 'react-native-reanimated';
 import { useState } from 'react';
 import * as Haptics from 'expo-haptics';
+import { Id } from '@/convex/_generated/dataModel';
 
 export default function DailyPlanScreen() {
   const { theme } = useUniwind();
   const tasks = useQuery(api.tasks.list);
   const generatePlan = useAction(api.planner.generateDailyPlan);
+  const updateTaskStatus = useMutation(api.tasks.updateStatus);
   
   const [isPlanning, setIsPlanning] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
+  const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
 
   const today = new Date().toLocaleDateString('en-US', { 
     weekday: 'long', 
@@ -28,7 +31,6 @@ export default function DailyPlanScreen() {
     setIsPlanning(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
-      // No need to pass userId, Convex action will use ctx.auth
       const result = await generatePlan({ userId: "me" }); 
       setAiSuggestion(result);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -40,7 +42,22 @@ export default function DailyPlanScreen() {
     }
   };
 
-  const focusTask = tasks?.find(t => t.status === 'todo');
+  const handleCompleteTask = async (taskId: Id<"tasks">) => {
+    setCompletingTaskId(taskId);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    try {
+      await updateTaskStatus({ taskId, status: "done" });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setCompletingTaskId(null);
+    }
+  };
+
+  const pendingTasks = tasks?.filter(t => t.status === 'todo') || [];
+  const completedTasks = tasks?.filter(t => t.status === 'done') || [];
+  const focusTask = pendingTasks[0];
 
   return (
     <View className="flex-1 bg-background">
@@ -100,9 +117,19 @@ export default function DailyPlanScreen() {
                 <Text className="text-indigo-400 font-outfit-semibold text-xs uppercase tracking-wider">Current Focus</Text>
               </View>
               <Text className="font-outfit-bold text-2xl leading-8 mb-4">{focusTask.title}</Text>
-              <Pressable className="bg-indigo-500 self-start px-5 py-2.5 rounded-full flex-row items-center gap-2">
-                <Icon as={CheckCircle2Icon} className="size-4 text-white" />
-                <Text className="text-white font-outfit-semibold text-sm">Complete</Text>
+              <Pressable 
+                onPress={() => handleCompleteTask(focusTask._id)}
+                disabled={completingTaskId === focusTask._id}
+                className="bg-indigo-500 self-start px-5 py-2.5 rounded-full flex-row items-center gap-2"
+              >
+                {completingTaskId === focusTask._id ? (
+                  <ActivityIndicator color="white" size="small" />
+                ) : (
+                  <>
+                    <Icon as={CheckCircle2Icon} className="size-4 text-white" />
+                    <Text className="text-white font-outfit-semibold text-sm">Complete</Text>
+                  </>
+                )}
               </Pressable>
             </Animated.View>
           ) : (
@@ -120,16 +147,22 @@ export default function DailyPlanScreen() {
             <Text className="font-outfit-bold text-xl mb-4">Upcoming</Text>
             {tasks === undefined ? (
               <Text className="text-muted-foreground italic">Loading your plan...</Text>
-            ) : tasks.length === 0 ? (
-              <Text className="text-muted-foreground italic">Your list is clear.</Text>
+            ) : pendingTasks.length === 0 ? (
+              <Text className="text-muted-foreground italic">All caught up!</Text>
             ) : (
-              tasks.map((task, index) => (
+              pendingTasks.slice(1).map((task, index) => (
                 <Animated.View 
                   key={task._id}
                   entering={FadeInDown.delay(300 + index * 100).springify()}
+                  exiting={FadeOutLeft}
                   className="flex-row items-center gap-4 mb-4 bg-white/5 p-4 rounded-2xl border border-white/5"
                 >
-                  <Icon as={CircleIcon} className="size-5 text-muted-foreground/50" />
+                  <Pressable 
+                    onPress={() => handleCompleteTask(task._id)}
+                    className="active:scale-90"
+                  >
+                    <Icon as={CircleIcon} className="size-6 text-muted-foreground/50" />
+                  </Pressable>
                   <View className="flex-1">
                     <Text className="font-outfit-medium text-lg">{task.title}</Text>
                     {task.priority === 'high' && (
@@ -140,6 +173,23 @@ export default function DailyPlanScreen() {
               ))
             )}
           </View>
+
+          {/* Completed Tasks */}
+          {completedTasks.length > 0 && (
+            <View className="mb-12">
+              <Text className="font-outfit-bold text-xl mb-4 text-muted-foreground">Completed</Text>
+              {completedTasks.map((task, index) => (
+                <Animated.View 
+                  key={task._id}
+                  entering={FadeInDown.delay(index * 50).springify()}
+                  className="flex-row items-center gap-4 mb-3 p-3 opacity-50"
+                >
+                  <Icon as={CheckIcon} className="size-5 text-emerald-500" />
+                  <Text className="font-outfit text-base line-through text-muted-foreground">{task.title}</Text>
+                </Animated.View>
+              ))}
+            </View>
+          )}
         </ScrollView>
       </SafeAreaView>
     </View>
