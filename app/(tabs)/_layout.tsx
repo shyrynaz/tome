@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { Icon } from '@/components/ui/icon';
-import { CalendarIcon, SparklesIcon, LibraryIcon } from 'lucide-react-native';
+import { CalendarIcon, SparklesIcon, LibraryIcon, UserIcon } from 'lucide-react-native';
 import { useUniwind } from 'uniwind';
 import { NAV_THEME } from '@/lib/theme';
 
@@ -52,6 +52,13 @@ export default function TabsLayout() {
         options={{
           title: 'Tome',
           tabBarIcon: ({ color, size }) => <Icon as={LibraryIcon} size={size} style={{ color }} />,
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color, size }) => <Icon as={UserIcon} size={size} style={{ color }} />,
         }}
       />
     </Tabs>
