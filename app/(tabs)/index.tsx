@@ -10,6 +10,7 @@ import Animated, { FadeInDown, FadeOutLeft } from 'react-native-reanimated';
 import { useState } from 'react';
 import * as Haptics from 'expo-haptics';
 import { Id } from '@/convex/_generated/dataModel';
+import { FocusMode } from '@/components/FocusMode';
 
 export default function DailyPlanScreen() {
   const { theme } = useUniwind();
@@ -20,6 +21,7 @@ export default function DailyPlanScreen() {
   const [isPlanning, setIsPlanning] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
   const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
+  const [showFocusMode, setShowFocusMode] = useState(false);
 
   const today = new Date().toLocaleDateString('en-US', { 
     weekday: 'long', 
@@ -117,20 +119,29 @@ export default function DailyPlanScreen() {
                 <Text className="text-indigo-400 font-outfit-semibold text-xs uppercase tracking-wider">Current Focus</Text>
               </View>
               <Text className="font-outfit-bold text-2xl leading-8 mb-4">{focusTask.title}</Text>
-              <Pressable 
-                onPress={() => handleCompleteTask(focusTask._id)}
-                disabled={completingTaskId === focusTask._id}
-                className="bg-indigo-500 self-start px-5 py-2.5 rounded-full flex-row items-center gap-2"
-              >
-                {completingTaskId === focusTask._id ? (
-                  <ActivityIndicator color="white" size="small" />
-                ) : (
-                  <>
-                    <Icon as={CheckCircle2Icon} className="size-4 text-white" />
-                    <Text className="text-white font-outfit-semibold text-sm">Complete</Text>
-                  </>
-                )}
-              </Pressable>
+              <View className="flex-row gap-3">
+                <Pressable 
+                  onPress={() => setShowFocusMode(true)}
+                  className="bg-white/10 self-start px-5 py-2.5 rounded-full flex-row items-center gap-2"
+                >
+                  <Icon as={TrophyIcon} className="size-4 text-indigo-400" />
+                  <Text className="text-indigo-400 font-outfit-semibold text-sm">Focus</Text>
+                </Pressable>
+                <Pressable 
+                  onPress={() => handleCompleteTask(focusTask._id)}
+                  disabled={completingTaskId === focusTask._id}
+                  className="bg-indigo-500 self-start px-5 py-2.5 rounded-full flex-row items-center gap-2"
+                >
+                  {completingTaskId === focusTask._id ? (
+                    <ActivityIndicator color="white" size="small" />
+                  ) : (
+                    <>
+                      <Icon as={CheckCircle2Icon} className="size-4 text-white" />
+                      <Text className="text-white font-outfit-semibold text-sm">Complete</Text>
+                    </>
+                  )}
+                </Pressable>
+              </View>
             </Animated.View>
           ) : (
              <Animated.View 
@@ -192,6 +203,15 @@ export default function DailyPlanScreen() {
           )}
         </ScrollView>
       </SafeAreaView>
+
+      {/* Focus Mode Overlay */}
+      {showFocusMode && focusTask && (
+        <FocusMode 
+          task={focusTask}
+          onClose={() => setShowFocusMode(false)}
+          onComplete={() => setShowFocusMode(false)}
+        />
+      )}
     </View>
   );
 }
