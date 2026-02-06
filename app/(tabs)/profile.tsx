@@ -1,7 +1,11 @@
 import React from 'react';
-import { View, SafeAreaView, ScrollView, Pressable, Image, Switch } from 'react-native';
+import { View, SafeAreaView, ScrollView, Pressable } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { Icon } from '@/components/ui/icon';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 import { useAuth, useUser } from '@clerk/clerk-expo';
 import { LinearGradient } from 'expo-linear-gradient';
 import { 
@@ -47,9 +51,8 @@ export default function ProfileScreen() {
       )}
       {type === 'switch' && (
         <Switch 
-          value={true} 
-          trackColor={{ false: '#3f3f46', true: '#5b21b6' }}
-          thumbColor="#fafafa"
+          checked={true}
+          onCheckedChange={() => {}}
         />
       )}
     </Pressable>
@@ -72,17 +75,14 @@ export default function ProfileScreen() {
             className="items-center mb-10"
           >
             <View className="relative">
-              <View className="size-24 rounded-full border-4 border-white/5 overflow-hidden shadow-2xl">
-                {user?.imageUrl ? (
-                  <Image source={{ uri: user.imageUrl }} className="size-full" />
-                ) : (
-                  <View className="size-full bg-primary items-center justify-center">
-                    <Text className="font-outfit-bold text-3xl text-white">
-                      {user?.firstName?.[0] || user?.emailAddresses?.[0]?.emailAddress?.[0] || 'U'}
-                    </Text>
-                  </View>
-                )}
-              </View>
+              <Avatar className="size-24 border-4 border-white/5 shadow-2xl">
+                <AvatarImage source={{ uri: user?.imageUrl }} />
+                <AvatarFallback className="bg-primary">
+                  <Text className="font-outfit-bold text-3xl text-white">
+                    {user?.firstName?.[0] || user?.emailAddresses?.[0]?.emailAddress?.[0] || 'U'}
+                  </Text>
+                </AvatarFallback>
+              </Avatar>
               <View className="absolute bottom-0 right-0 bg-emerald-500 size-6 rounded-full border-4 border-background" />
             </View>
             
@@ -94,9 +94,9 @@ export default function ProfileScreen() {
             </Text>
             
             <View className="flex-row gap-2 mt-4">
-              <View className="bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
+              <Badge variant="outline" className="bg-primary/10 border-primary/20">
                 <Text className="text-primary font-outfit-bold text-xs uppercase tracking-wider">Pro Plan</Text>
-              </View>
+              </Badge>
             </View>
           </Animated.View>
 
@@ -105,16 +105,20 @@ export default function ProfileScreen() {
             entering={FadeInDown.delay(100).springify()}
             className="flex-row gap-4 mb-8"
           >
-            <View className="flex-1 bg-card/40 border border-white/5 p-4 rounded-3xl backdrop-blur-md">
-              <Icon as={SparklesIcon} className="size-6 text-purple-400 mb-2" />
-              <Text className="font-outfit-bold text-2xl text-foreground">1,248</Text>
-              <Text className="font-outfit text-xs text-muted-foreground uppercase tracking-wider">Thoughts</Text>
-            </View>
-            <View className="flex-1 bg-card/40 border border-white/5 p-4 rounded-3xl backdrop-blur-md">
-              <Icon as={ZapIcon} className="size-6 text-amber-400 mb-2" />
-              <Text className="font-outfit-bold text-2xl text-foreground">84%</Text>
-              <Text className="font-outfit text-xs text-muted-foreground uppercase tracking-wider">Focus Score</Text>
-            </View>
+            <Card className="flex-1 bg-card/40 border-white/5 backdrop-blur-md">
+              <CardContent className="p-4 flex items-center justify-center">
+                <Icon as={SparklesIcon} className="size-6 text-purple-400 mb-2" />
+                <Text className="font-outfit-bold text-2xl text-foreground">1,248</Text>
+                <Text className="font-outfit text-xs text-muted-foreground uppercase tracking-wider">Thoughts</Text>
+              </CardContent>
+            </Card>
+            <Card className="flex-1 bg-card/40 border-white/5 backdrop-blur-md">
+              <CardContent className="p-4 flex items-center justify-center">
+                <Icon as={ZapIcon} className="size-6 text-amber-400 mb-2" />
+                <Text className="font-outfit-bold text-2xl text-foreground">84%</Text>
+                <Text className="font-outfit text-xs text-muted-foreground uppercase tracking-wider">Focus Score</Text>
+              </CardContent>
+            </Card>
           </Animated.View>
 
           {/* Settings Section */}
