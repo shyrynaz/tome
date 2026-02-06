@@ -142,6 +142,19 @@ export default function TomeScreen() {
                   <Text className="font-outfit text-base leading-6 text-foreground/90" numberOfLines={3}>
                     {item.content}
                   </Text>
+                  
+                  {item.summary && (
+                    <View className="mt-3 bg-indigo-500/5 border border-indigo-500/10 p-3 rounded-xl">
+                      <View className="flex-row items-center gap-2 mb-1">
+                        <Icon as={SparklesIcon} className="size-3 text-indigo-400" />
+                        <Text className="text-indigo-400 font-outfit-bold text-[10px] uppercase tracking-wider">AI Summary</Text>
+                      </View>
+                      <Text className="font-outfit text-xs text-muted-foreground leading-5">
+                        {item.summary}
+                      </Text>
+                    </View>
+                  )}
+                  
                   <View className="mt-3 flex-row items-center justify-end">
                     <Icon as={ChevronRightIcon} className="size-4 text-muted-foreground/30" />
                   </View>
