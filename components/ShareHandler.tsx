@@ -10,7 +10,7 @@ import Animated, {
 import { Text } from './ui/text';
 import { Icon } from './ui/icon';
 import { SparklesIcon, XIcon, CheckCircle2Icon, LinkIcon, FileTextIcon } from 'lucide-react-native';
-import { useMutation } from 'convex/react';
+import { useMutation, useAction } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { intentParser } from '@/lib/ai/intent-parser';
 import * as Haptics from 'expo-haptics';
@@ -19,6 +19,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 export function ShareHandler() {
   const { hasShareIntent, shareIntent, resetShareIntent, error } = useShareIntent();
   const captureThought = useMutation(api.brainDump.capture);
+  const summarizeUrl = useAction(api.scraper.summarizeUrl);
   
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -37,11 +38,17 @@ export function ShareHandler() {
       const content = shareIntent.value;
       const result = await intentParser.parse(content);
       
+      let summary = undefined;
+      if (shareIntent.type === 'weburl') {
+        summary = await summarizeUrl({ url: content });
+      }
+      
       await captureThought({
         content: content,
         intent: result.intent,
         cleanedText: result.cleanedText,
         priority: result.priority,
+        summary: summary,
       });
 
       setIsSuccess(true);

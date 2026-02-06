@@ -17,6 +17,7 @@ export const capture = mutation({
       v.literal("medium"),
       v.literal("high")
     )),
+    summary: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -32,6 +33,7 @@ export const capture = mutation({
       processed: args.intent !== "UNKNOWN",
       source: "brain_dump",
       intent: args.intent,
+      summary: args.summary,
     });
 
     // 2. If it's a TASK, immediately create a task entry

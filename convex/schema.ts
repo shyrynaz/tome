@@ -26,6 +26,7 @@ export default defineSchema({
     userId: v.string(),
     processed: v.boolean(), // whether it has been turned into a task or archived
     intent: v.optional(v.string()), // Store the AI detected intent
+    summary: v.optional(v.string()), // For shared links/long notes
   }).index("by_user", ["userId"]),
 
   profiles: defineTable({
