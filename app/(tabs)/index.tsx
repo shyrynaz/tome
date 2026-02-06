@@ -92,11 +92,11 @@ export default function DailyPlanScreen() {
           {aiSuggestion && (
             <Animated.View 
               entering={FadeInDown.springify()}
-              className="mb-8 bg-card border border-white/5 p-6 rounded-3xl shadow-2xl shadow-indigo-500/10"
+              className="mb-8 bg-card/30 border border-white/5 p-6 rounded-[24px] backdrop-blur-md"
             >
               <View className="flex-row items-center justify-between mb-4">
                 <View className="flex-row items-center gap-2">
-                  <View className="bg-primary/10 p-2 rounded-xl">
+                  <View className="bg-primary/20 p-2 rounded-xl">
                     <Icon as={SparklesIcon} className="size-4 text-primary" />
                   </View>
                   <Text className="text-primary font-outfit-bold text-xs uppercase tracking-widest">AI Strategist</Text>
@@ -118,14 +118,23 @@ export default function DailyPlanScreen() {
               entering={FadeInDown.delay(200).springify()}
               className="mb-10"
             >
-              <View className="bg-card border border-white/10 p-1 rounded-[32px]">
-                <View className="bg-white/5 p-6 rounded-[28px] overflow-hidden relative">
-                   {/* Simulated Glow */}
-                   <View className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-3xl -mr-16 -mt-16 rounded-full" />
+              {/* Focus Card Gradient Border */}
+              <View className="p-[1px] rounded-[32px] overflow-hidden">
+                <LinearGradient
+                  colors={['rgba(139, 92, 246, 0.5)', 'rgba(245, 158, 11, 0.2)']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+                />
+                <View className="bg-[#0F0F16]/90 p-6 rounded-[31px] backdrop-blur-xl">
+                   {/* Ambient Glow */}
+                   <View className="absolute top-0 right-0 w-40 h-40 bg-primary/20 blur-[60px] -mr-10 -mt-10 rounded-full" />
                    
                   <View className="flex-row items-center justify-between mb-6">
                     <View className="flex-row items-center gap-2">
-                      <Icon as={TrophyIcon} className="size-4 text-primary" />
+                      <View className="bg-primary/10 p-2 rounded-full">
+                        <Icon as={TrophyIcon} className="size-4 text-primary" />
+                      </View>
                       <Text className="text-primary font-outfit-bold text-xs uppercase tracking-widest">Current Focus</Text>
                     </View>
                     {focusTask.priority === 'high' && (
@@ -149,7 +158,7 @@ export default function DailyPlanScreen() {
                     <Pressable 
                       onPress={() => handleCompleteTask(focusTask._id)}
                       disabled={completingTaskId === focusTask._id}
-                      className="bg-primary active:bg-primary/90 flex-1 py-4 rounded-2xl flex-row items-center justify-center gap-2 shadow-lg shadow-indigo-500/20"
+                      className="bg-primary active:bg-primary/90 flex-1 py-4 rounded-2xl flex-row items-center justify-center gap-2 shadow-lg shadow-primary/25"
                     >
                       {completingTaskId === focusTask._id ? (
                         <ActivityIndicator color="white" size="small" />

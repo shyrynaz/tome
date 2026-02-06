@@ -24,6 +24,7 @@ import * as Haptics from 'expo-haptics';
 import { useMutation, useAction } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { modelManager } from '@/lib/ai/model-manager';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Clipboard from 'expo-clipboard';
 
 export function BrainDump() {
@@ -146,6 +147,12 @@ export function BrainDump() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       className="flex-1 justify-end p-6"
     >
+      <LinearGradient
+        colors={['rgba(139, 92, 246, 0.15)', 'transparent']}
+        className="absolute inset-0"
+        pointerEvents="none"
+      />
+
       <Animated.View 
         entering={FadeInDown.delay(200).springify()}
         style={animatedInputStyle}
@@ -153,15 +160,15 @@ export function BrainDump() {
       >
         <AIBorderGlow active={text.length > 0} />
         
-        <View className="bg-card border-white/10 overflow-hidden rounded-2xl border backdrop-blur-xl shadow-2xl shadow-black/50">
-          <View className="flex-row items-center p-4">
+        <View className="bg-card/40 border-white/10 overflow-hidden rounded-[32px] border backdrop-blur-3xl shadow-2xl shadow-black/50">
+          <View className="flex-row items-center p-5">
             <View className="flex-1">
               <TextInput
                 ref={inputRef}
                 multiline
                 placeholder="What's on your mind?"
-                placeholderTextColor="#666"
-                className="font-outfit text-foreground min-h-[100px] text-lg leading-7 tracking-tight"
+                placeholderTextColor="rgba(255,255,255,0.3)"
+                className="font-outfit text-foreground min-h-[120px] text-xl leading-8 tracking-tight"
                 value={text}
                 onChangeText={handleTextChange}
                 onFocus={onFocus}
@@ -176,14 +183,14 @@ export function BrainDump() {
             <View className="flex-row items-center gap-2">
               <Pressable 
                 onPress={() => {/* Voice placeholder */}}
-                className="active:scale-95 h-10 w-10 items-center justify-center rounded-full bg-white/5 hover:bg-white/10"
+                className="active:scale-95 h-10 w-10 items-center justify-center rounded-full bg-white/5 active:bg-white/10"
               >
                 <Icon as={MicIcon} className="text-muted-foreground size-5" />
               </Pressable>
 
               <Pressable 
                 onPress={handlePasteLink}
-                className="active:scale-95 h-10 w-10 items-center justify-center rounded-full bg-white/5 hover:bg-white/10"
+                className="active:scale-95 h-10 w-10 items-center justify-center rounded-full bg-white/5 active:bg-white/10"
               >
                 <Icon as={LinkIcon} className="text-muted-foreground size-5" />
               </Pressable>
