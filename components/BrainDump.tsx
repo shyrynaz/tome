@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, TextInput, KeyboardAvoidingView, Platform, Pressable, ActivityIndicator, Dimensions } from 'react-native';
+import { View, TextInput, Platform, Pressable, ActivityIndicator, Dimensions } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { 
   FadeInDown, 
   FadeInUp,
@@ -162,8 +164,8 @@ export function BrainDump() {
 
   return (
     <KeyboardAvoidingView 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1"
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      className=\"flex-1\"
     >
       {/* Dynamic Background */}
       <View className="absolute inset-0 overflow-hidden">

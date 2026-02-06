@@ -1,22 +1,26 @@
-import { Icon } from '@/components/ui/icon';
-import { Text } from '@/components/ui/text';
-import { useSignIn } from '@clerk/clerk-expo';
-import * as Haptics from 'expo-haptics';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Stack, useRouter } from 'expo-router';
-import { ArrowRightIcon, ChevronLeftIcon, LockIcon, MailIcon } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
-  KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   ScrollView,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Stack, useRouter } from 'expo-router';
+import { useSignIn } from '@clerk/clerk-expo';
+import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
+import { MailIcon, LockIcon, ArrowRightIcon, ChevronLeftIcon, SparklesIcon } from 'lucide-react-native';
+
+import { Icon } from '@/components/ui/icon';
+import { Text } from '@/components/ui/text';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 
 export default function SigninScreen() {
   const { isLoaded, signIn, setActive } = useSignIn();
@@ -38,8 +42,6 @@ export default function SigninScreen() {
         password,
       });
 
-      console.log('completeSignIn', completeSignIn.status);
-
       if (completeSignIn.status === 'complete') {
         await setActive({ session: completeSignIn.createdSessionId });
         router.replace('/(tabs)');
@@ -56,98 +58,131 @@ export default function SigninScreen() {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="bg-background flex-1">
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      className="bg-background flex-1"
+    >
       <Stack.Screen options={{ headerShown: false }} />
-      <LinearGradient
-        colors={['rgba(139, 92, 246, 0.15)', 'transparent']}
-        className="absolute inset-0"
-      />
+      
+      {/* Atmosphere Background */}
+      <View className="absolute inset-0 overflow-hidden">
+        <LinearGradient
+          colors={['#1a103d', '#0F0F16']}
+          className="absolute inset-0"
+        />
+        {/* Ambient Glows */}
+        <View className="absolute -top-20 -left-20 w-80 h-80 bg-primary/20 blur-[100px] rounded-full" />
+        <View className="absolute top-1/2 -right-20 w-60 h-60 bg-secondary/10 blur-[80px] rounded-full" />
+      </View>
 
       <SafeAreaView className="flex-1">
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
-          <View className="px-8 pt-4">
-            <TouchableOpacity
-              onPress={() => router.back()}
-              className="mb-8 h-10 w-10 items-center justify-center rounded-full bg-white/5">
-              <Icon as={ChevronLeftIcon} className="text-foreground size-6" />
-            </TouchableOpacity>
+        <ScrollView 
+          contentContainerStyle={{ flexGrow: 1 }} 
+          keyboardShouldPersistTaps="handled"
+          className="px-6"
+        >
+          {/* Header */}
+          <Animated.View entering={FadeInDown.delay(200).springify()} className="mt-16 mb-10">
+            <View className="flex-row items-center gap-3 mb-2">
+              <View className="bg-primary/20 p-2 rounded-xl border border-primary/20">
+                <Icon as={SparklesIcon} className="text-primary size-5" />
+              </View>
+              <Text className="text-primary font-outfit-bold text-xs uppercase tracking-[3px]">Member Access</Text>
+            </View>
+            <Text className="font-outfit-bold text-5xl tracking-tighter text-foreground">Welcome Back</Text>
+            <Text className="text-muted-foreground font-outfit text-lg mt-2 opacity-70">
+              Access your collective intelligence.
+            </Text>
+          </Animated.View>
 
-            <Animated.View entering={FadeInDown.springify()}>
-              <Text className="font-outfit-bold mb-2 text-4xl tracking-tighter">Welcome Back</Text>
-              <Text className="text-muted-foreground font-outfit mb-8 text-lg">
-                Log in to your Tome.
-              </Text>
-
-              <View className="gap-6">
-                <View>
-                  <Text className="font-outfit-medium text-muted-foreground mb-2 ml-1 text-sm">
+          {/* Login Card */}
+          <Animated.View entering={FadeInDown.delay(300).springify()}>
+            <Card className="bg-card/40 border-white/10 rounded-[32px] backdrop-blur-3xl overflow-hidden shadow-2xl">
+              <CardContent className="p-8 gap-6">
+                
+                {/* Email Field */}
+                <View className="gap-2">
+                  <Label nativeID="email-label" className="ml-1 text-muted-foreground/60 text-xs uppercase tracking-widest">
                     Email Address
-                  </Text>
+                  </Label>
                   <View className="relative">
-                    <TextInput
+                    <View className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
+                      <Icon as={MailIcon} className="text-muted-foreground/40 size-5" />
+                    </View>
+                    <Input
                       autoCapitalize="none"
                       placeholder="you@example.com"
-                      placeholderTextColor="#666"
-                      className="font-outfit text-foreground h-14 rounded-2xl border border-white/10 bg-white/5 px-4 pl-12 text-lg"
+                      className="h-14 rounded-2xl bg-white/5 border-white/10 pl-12 text-lg font-outfit text-foreground"
                       value={emailAddress}
                       onChangeText={setEmailAddress}
                       keyboardType="email-address"
                     />
-                    <Icon
-                      as={MailIcon}
-                      className="text-muted-foreground absolute top-4.5 left-4 size-5"
-                    />
                   </View>
                 </View>
 
-                <View>
-                  <Text className="font-outfit-medium text-muted-foreground mb-2 ml-1 text-sm">
+                {/* Password Field */}
+                <View className="gap-2">
+                  <Label nativeID="password-label" className="ml-1 text-muted-foreground/60 text-xs uppercase tracking-widest">
                     Password
-                  </Text>
+                  </Label>
                   <View className="relative">
-                    <TextInput
+                    <View className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
+                      <Icon as={LockIcon} className="text-muted-foreground/40 size-5" />
+                    </View>
+                    <Input
                       placeholder="Enter your password"
-                      placeholderTextColor="#666"
                       secureTextEntry
-                      className="font-outfit text-foreground h-14 rounded-2xl border border-white/10 bg-white/5 px-4 pl-12 text-lg"
+                      className="h-14 rounded-2xl bg-white/5 border-white/10 pl-12 text-lg font-outfit text-foreground"
                       value={password}
                       onChangeText={setPassword}
-                    />
-                    <Icon
-                      as={LockIcon}
-                      className="text-muted-foreground absolute top-4.5 left-4 size-5"
                     />
                   </View>
                 </View>
 
                 {error ? (
-                  <Text className="font-outfit text-center text-sm text-rose-400">{error}</Text>
+                  <Animated.View entering={FadeInDown} className="bg-destructive/10 p-4 rounded-xl border border-destructive/20">
+                    <Text className="font-outfit text-center text-sm text-destructive">{error}</Text>
+                  </Animated.View>
                 ) : null}
 
-                <TouchableOpacity
+                <Button
                   onPress={onSignInPress}
                   disabled={isLoading}
-                  className="mt-4 h-14 flex-row items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
+                  size="lg"
+                  className="mt-2 h-16 rounded-2xl bg-primary shadow-xl shadow-primary/25"
+                >
                   {isLoading ? (
                     <ActivityIndicator color="white" />
                   ) : (
-                    <>
-                      <Text className="font-outfit-semibold mr-2 text-lg text-white">Log In</Text>
+                    <View className="flex-row items-center gap-2">
+                      <Text className="font-outfit-bold text-lg text-white">Continue to Tome</Text>
                       <Icon as={ArrowRightIcon} className="size-5 text-white" />
-                    </>
+                    </View>
                   )}
-                </TouchableOpacity>
+                </Button>
 
-                <TouchableOpacity onPress={() => router.replace('/signup')} className="mt-4">
+                <TouchableOpacity 
+                  onPress={() => router.replace('/signup')} 
+                  className="mt-2 active:opacity-60"
+                >
                   <Text className="font-outfit text-muted-foreground text-center">
-                    Don't have an account?{' '}
-                    <Text className="font-outfit-bold text-primary">Sign Up</Text>
+                    New to the Tome?{' '}
+                    <Text className="font-outfit-bold text-primary">Join the collective</Text>
                   </Text>
                 </TouchableOpacity>
-              </View>
-            </Animated.View>
-          </View>
+
+              </CardContent>
+            </Card>
+          </Animated.View>
+
+          {/* Footer Quote */}
+          <Animated.View 
+            entering={FadeInDown.delay(500).springify()}
+            className="mt-12 mb-8 opacity-30"
+          >
+            <Text className="text-center font-outfit-medium text-xs text-muted-foreground italic px-10">
+              "An investment in knowledge always pays the best interest."
+            </Text>
+          </Animated.View>
         </ScrollView>
       </SafeAreaView>
     </KeyboardAvoidingView>

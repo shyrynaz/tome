@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { View, SafeAreaView, ScrollView, TextInput, Pressable, Dimensions } from 'react-native';
+import { View, ScrollView, TextInput, Pressable, Dimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text } from '@/components/ui/text';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';

@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { Icon } from '@/components/ui/icon';
 import { ArrowRightIcon, BrainCircuitIcon, SparklesIcon, LibraryIcon } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { storage } from '@/lib/storage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -54,6 +55,7 @@ export default function OnboardingScreen() {
 
   const handleContinue = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    storage.set('hasSeenOnboarding', true);
     router.replace('/signin');
   };
 

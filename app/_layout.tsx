@@ -1,26 +1,28 @@
 import '@/global.css';
 
+import { ShareHandler } from '@/components/ShareHandler';
+import { tokenCache } from '@/lib/auth';
 import { NAV_THEME } from '@/lib/theme';
-import { ThemeProvider } from '@react-navigation/native';
-import { PortalHost } from '@rn-primitives/portal';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import { useUniwind } from 'uniwind';
-import { ConvexReactClient } from "convex/react";
-import { ConvexProviderWithClerk } from "convex/react-clerk";
-import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
-import * as SplashScreen from 'expo-splash-screen';
+import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
 import {
-  useFonts,
   Outfit_300Light,
   Outfit_400Regular,
   Outfit_500Medium,
   Outfit_600SemiBold,
   Outfit_700Bold,
+  useFonts,
 } from '@expo-google-fonts/outfit';
+import { ThemeProvider } from '@react-navigation/native';
+import { PortalHost } from '@rn-primitives/portal';
+import { ConvexReactClient } from 'convex/react';
+import { ConvexProviderWithClerk } from 'convex/react-clerk';
+import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { tokenCache } from '@/lib/auth';
-import { ShareHandler } from '@/components/ShareHandler';
+import { useUniwind } from 'uniwind';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 
 const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
@@ -59,12 +61,16 @@ export default function RootLayout() {
   return (
     <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-        <ThemeProvider value={NAV_THEME[theme ?? 'light']}>
-          <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
-          <Stack />
-          <PortalHost />
-          <ShareHandler />
-        </ThemeProvider>
+        <SafeAreaProvider>
+          <KeyboardProvider>
+            <ThemeProvider value={NAV_THEME[theme ?? 'light']}>
+              <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
+              <Stack screenOptions={{ headerShown: false }} />
+              <PortalHost />
+              <ShareHandler />
+            </ThemeProvider>
+          </KeyboardProvider>
+        </SafeAreaProvider>
       </ConvexProviderWithClerk>
     </ClerkProvider>
   );
