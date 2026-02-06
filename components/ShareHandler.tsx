@@ -1,26 +1,33 @@
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, ActivityIndicator, Pressable, AppState } from 'react-native';
-import { useShareIntent } from 'expo-share-intent';
-import Animated, { 
-  FadeInDown, 
-  FadeOutDown, 
-  SlideInBottom, 
-  SlideOutBottom 
-} from 'react-native-reanimated';
-import { Text } from './ui/text';
-import { Icon } from './ui/icon';
-import { SparklesIcon, XIcon, CheckCircle2Icon, LinkIcon, FileTextIcon } from 'lucide-react-native';
-import { useMutation, useAction } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { intentParser } from '@/lib/ai/intent-parser';
+import { useAction, useMutation } from 'convex/react';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useShareIntent } from 'expo-share-intent';
+import { CheckCircle2Icon, FileTextIcon, LinkIcon, SparklesIcon, XIcon } from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  AppState,
+  Pressable,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import Animated, {
+  FadeInDown,
+  FadeOutDown,
+  SlideInDown,
+  SlideOutDown,
+} from 'react-native-reanimated';
+import { Icon } from './ui/icon';
+import { Text } from './ui/text';
 
 export function ShareHandler() {
   const { hasShareIntent, shareIntent, resetShareIntent, error } = useShareIntent();
   const captureThought = useMutation(api.brainDump.capture);
   const summarizeUrl = useAction(api.scraper.summarizeUrl);
-  
+
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -33,7 +40,7 @@ export function ShareHandler() {
 
   // Prevent processing while the app is in the background
   useEffect(() => {
-    const subscription = AppState.addEventListener('change', nextAppState => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (nextAppState === 'active' && hasShareIntent) {
         // App became active and has a pending intent
       }
@@ -51,12 +58,12 @@ export function ShareHandler() {
     try {
       const content = shareIntent.value;
       const result = await intentParser.parse(content);
-      
+
       let summary = undefined;
       if (shareIntent.type === 'weburl') {
         summary = await summarizeUrl({ url: content });
       }
-      
+
       await captureThought({
         content: content,
         intent: result.intent,
@@ -67,7 +74,7 @@ export function ShareHandler() {
 
       setIsSuccess(true);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      
+
       // Auto-dismiss after 2 seconds
       setTimeout(() => {
         handleDismiss();
@@ -89,28 +96,23 @@ export function ShareHandler() {
   if (!hasShareIntent) return null;
 
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="box-none" className="justify-end p-6 z-50">
-      <Pressable 
-        style={StyleSheet.absoluteFill} 
-        onPress={handleDismiss}
-        className="bg-black/40"
-      />
-      
-      <Animated.View 
-        entering={SlideInBottom.springify()}
-        exiting={SlideOutBottom.springify()}
-        className="bg-background border border-border/50 rounded-3xl overflow-hidden shadow-2xl"
-      >
+    <View style={StyleSheet.absoluteFill} pointerEvents="box-none" className="z-50 justify-end p-6">
+      <Pressable style={StyleSheet.absoluteFill} onPress={handleDismiss} className="bg-black/40" />
+
+      <Animated.View
+        entering={SlideInDown.springify()}
+        exiting={SlideOutDown.springify()}
+        className="bg-background border-border/50 overflow-hidden rounded-3xl border shadow-2xl">
         <LinearGradient
           colors={['rgba(99, 102, 241, 0.1)', 'transparent']}
           className="absolute inset-0"
         />
-        
+
         <View className="p-6">
-          <View className="flex-row items-center justify-between mb-4">
+          <View className="mb-4 flex-row items-center justify-between">
             <View className="flex-row items-center gap-2">
-              <View className="bg-indigo-500/20 p-2 rounded-xl">
-                <Icon as={SparklesIcon} className="text-indigo-400 size-5" />
+              <View className="rounded-xl bg-indigo-500/20 p-2">
+                <Icon as={SparklesIcon} className="size-5 text-indigo-400" />
               </View>
               <Text className="font-outfit-bold text-xl">Capture to Tome</Text>
             </View>
@@ -119,13 +121,13 @@ export function ShareHandler() {
             </TouchableOpacity>
           </View>
 
-          <View className="bg-white/5 border border-white/5 rounded-2xl p-4 mb-6">
-            <View className="flex-row items-center gap-2 mb-2">
-              <Icon 
-                as={shareIntent.type === 'weburl' ? LinkIcon : FileTextIcon} 
-                className="size-3 text-muted-foreground" 
+          <View className="mb-6 rounded-2xl border border-white/5 bg-white/5 p-4">
+            <View className="mb-2 flex-row items-center gap-2">
+              <Icon
+                as={shareIntent.type === 'weburl' ? LinkIcon : FileTextIcon}
+                className="text-muted-foreground size-3"
               />
-              <Text className="text-muted-foreground font-outfit-medium text-[10px] uppercase tracking-widest">
+              <Text className="text-muted-foreground font-outfit-medium text-[10px] tracking-widest uppercase">
                 {shareIntent.type === 'weburl' ? 'Shared Link' : 'Shared Text'}
               </Text>
             </View>
@@ -134,20 +136,19 @@ export function ShareHandler() {
             </Text>
           </View>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={handleCapture}
             disabled={isProcessing || isSuccess}
-            className={`h-14 rounded-2xl flex-row items-center justify-center ${isSuccess ? 'bg-emerald-500' : 'bg-indigo-500'}`}
-          >
+            className={`h-14 flex-row items-center justify-center rounded-2xl ${isSuccess ? 'bg-emerald-500' : 'bg-indigo-500'}`}>
             {isProcessing ? (
               <ActivityIndicator color="white" />
             ) : isSuccess ? (
               <>
-                <Icon as={CheckCircle2Icon} className="text-white size-5 mr-2" />
-                <Text className="text-white font-outfit-semibold text-lg">Added to Tome</Text>
+                <Icon as={CheckCircle2Icon} className="mr-2 size-5 text-white" />
+                <Text className="font-outfit-semibold text-lg text-white">Added to Tome</Text>
               </>
             ) : (
-              <Text className="text-white font-outfit-semibold text-lg">Capture Thought</Text>
+              <Text className="font-outfit-semibold text-lg text-white">Capture Thought</Text>
             )}
           </TouchableOpacity>
         </View>
