@@ -60,7 +60,7 @@ export default function SigninScreen() {
       className="bg-background flex-1">
       <Stack.Screen options={{ headerShown: false }} />
       <LinearGradient
-        colors={['rgba(99, 102, 241, 0.1)', 'transparent']}
+        colors={['rgba(139, 92, 246, 0.15)', 'transparent']}
         className="absolute inset-0"
       />
 
@@ -128,7 +128,7 @@ export default function SigninScreen() {
                 <TouchableOpacity
                   onPress={onSignInPress}
                   disabled={isLoading}
-                  className="mt-4 h-14 flex-row items-center justify-center rounded-2xl bg-indigo-500">
+                  className="mt-4 h-14 flex-row items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
                   {isLoading ? (
                     <ActivityIndicator color="white" />
                   ) : (
@@ -142,7 +142,7 @@ export default function SigninScreen() {
                 <TouchableOpacity onPress={() => router.replace('/signup')} className="mt-4">
                   <Text className="font-outfit text-muted-foreground text-center">
                     Don't have an account?{' '}
-                    <Text className="font-outfit-bold text-indigo-400">Sign Up</Text>
+                    <Text className="font-outfit-bold text-primary">Sign Up</Text>
                   </Text>
                 </TouchableOpacity>
               </View>
