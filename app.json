@@ -38,6 +38,18 @@
       "expo-router",
       "expo-dev-client",
       [
+        "expo-share-intent",
+        {
+          "ios": {
+            "activationRules": [
+              "https?://.*",
+              "public.text",
+              "public.plain-text"
+            ]
+          }
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "android": {
