@@ -118,3 +118,27 @@ export const remove = mutation({
     await ctx.db.delete(args.id);
   },
 });
+
+export const setReminderStatus = mutation({
+  args: {
+    id: v.id('entries'),
+    status: v.union(
+      v.literal('none'),
+      v.literal('suggested'),
+      v.literal('set'),
+      v.literal('completed')
+    ),
+    reminderAt: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error('Not authenticated');
+    const entry = await ctx.db.get(args.id);
+    if (!entry || entry.userId !== identity.subject) throw new Error('Not found');
+    await ctx.db.patch(args.id, {
+      reminderStatus: args.status,
+      reminderAt: args.reminderAt,
+      updatedAt: Date.now(),
+    });
+  },
+});
