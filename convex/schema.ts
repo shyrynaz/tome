@@ -39,4 +39,11 @@ export default defineSchema({
     userId: v.string(),
     createdAt: v.number(),
   }).index('by_user', ['userId']),
+
+  profiles: defineTable({
+    userId: v.string(),
+    name: v.optional(v.string()),
+    email: v.optional(v.string()),
+    preferences: v.optional(v.any()),
+  }).index('by_user', ['userId']),
 });
