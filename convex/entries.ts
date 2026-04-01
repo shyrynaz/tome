@@ -80,7 +80,11 @@ export const list = query({
 export const getById = query({
   args: { id: v.id('entries') },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.id);
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
+    const entry = await ctx.db.get(args.id);
+    if (!entry || entry.userId !== identity.subject) return null;
+    return entry;
   },
 });
 
@@ -92,6 +96,10 @@ export const update = mutation({
     folderId: v.optional(v.id('folders')),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error('Not authenticated');
+    const entry = await ctx.db.get(args.id);
+    if (!entry || entry.userId !== identity.subject) throw new Error('Not found');
     const { id, ...updates } = args;
     await ctx.db.patch(id, {
       ...updates,
@@ -103,6 +111,10 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id('entries') },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error('Not authenticated');
+    const entry = await ctx.db.get(args.id);
+    if (!entry || entry.userId !== identity.subject) throw new Error('Not found');
     await ctx.db.delete(args.id);
   },
 });
