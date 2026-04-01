@@ -1,47 +1,46 @@
 import React, { useState } from 'react';
 import { View, Dimensions, Pressable, StyleSheet } from 'react-native';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  useAnimatedScrollHandler, 
-  interpolate, 
-  Extrapolation
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  useAnimatedScrollHandler,
+  interpolate,
+  Extrapolation,
 } from 'react-native-reanimated';
 import { Text } from '@/components/ui/text';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Icon } from '@/components/ui/icon';
-import { ArrowRightIcon, BrainCircuitIcon, SparklesIcon, LibraryIcon } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
-import { storage } from '@/lib/storage';
-
-const { width, height } = Dimensions.get('window');
+import { ArrowRightIcon, SparklesIcon, FolderOpenIcon, BellIcon } from 'lucide-react-native';
 
 const SLIDES = [
   {
     id: '1',
     title: 'Capture Instantly',
-    description: 'Offload your thoughts in milliseconds. Our AI parses tasks, events, and ideas automatically.',
+    description:
+      'Text or links in seconds. No categories, no friction. Just type and save — like sending yourself a message.',
     icon: SparklesIcon,
-    color: '#8B5CF6', // Primary Purple
-    gradient: ['#4c1d95', '#5b21b6', 'transparent'],
+    color: '#22c55e', // Green
+    gradient: ['#052e16', '#14532d', 'transparent'],
   },
   {
     id: '2',
-    title: 'Plan Intelligently',
-    description: 'Turn chaos into clarity. Let the AI Strategist organize your day based on your energy and priorities.',
-    icon: BrainCircuitIcon,
-    color: '#F59E0B', // Amber
-    gradient: ['#78350f', '#92400e', 'transparent'],
+    title: 'Organize Automatically',
+    description:
+      'AI auto-tags everything. Create folders when you want structure. Search semantically across everything you know.',
+    icon: FolderOpenIcon,
+    color: '#f59e0b', // Amber
+    gradient: ['#451a03', '#78350f', 'transparent'],
   },
   {
     id: '3',
-    title: 'Recall Forever',
-    description: "Your collective intelligence archive. Every thought you've ever had, searchable in an instant.",
-    icon: LibraryIcon,
-    color: '#0D9488', // Teal
-    gradient: ['#134e4a', '#115e59', 'transparent'],
-  }
+    title: 'Never Forget',
+    description:
+      'Smart reminders surface what matters. Bookmarks with AI summaries. Your personal knowledge engine, always at hand.',
+    icon: BellIcon,
+    color: '#3b82f6', // Blue
+    gradient: ['#172554', '#1e3a5f', 'transparent'],
+  },
 ];
 
 export default function OnboardingScreen() {
@@ -66,7 +65,7 @@ export default function OnboardingScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background">
+    <View className="bg-background flex-1">
       <Animated.ScrollView
         horizontal
         pagingEnabled
@@ -74,11 +73,10 @@ export default function OnboardingScreen() {
         onScroll={onScroll}
         onMomentumScrollEnd={handleScrollEnd}
         scrollEventThrottle={16}
-        className="flex-1"
-      >
+        className="flex-1">
         {SLIDES.map((slide, index) => {
           const inputRange = [(index - 1) * width, index * width, (index + 1) * width];
-          
+
           const animatedStyle = useAnimatedStyle(() => {
             const scale = interpolate(
               scrollX.value,
@@ -99,7 +97,10 @@ export default function OnboardingScreen() {
           });
 
           return (
-            <View key={slide.id} style={{ width, height }} className="items-center justify-center p-8">
+            <View
+              key={slide.id}
+              style={{ width, height }}
+              className="items-center justify-center p-8">
               {/* Background Gradient Orb */}
               <LinearGradient
                 colors={slide.gradient}
@@ -108,17 +109,17 @@ export default function OnboardingScreen() {
                 end={{ x: 0.5, y: 1 }}
                 className="opacity-30"
               />
-              
+
               <Animated.View style={animatedStyle} className="items-center">
-                <View className="bg-white/10 p-8 rounded-[40px] mb-10 backdrop-blur-3xl border border-white/10 shadow-2xl shadow-black/50">
+                <View className="mb-10 rounded-[40px] border border-white/10 bg-white/10 p-8 shadow-2xl shadow-black/50 backdrop-blur-3xl">
                   <Icon as={slide.icon} size={64} color={slide.color} />
                 </View>
-                
-                <Text className="font-outfit-bold text-4xl text-center mb-4 leading-tight tracking-tight">
+
+                <Text className="font-outfit-bold mb-4 text-center text-4xl leading-tight tracking-tight">
                   {slide.title}
                 </Text>
-                
-                <Text className="font-outfit text-muted-foreground text-center text-lg leading-7 px-4">
+
+                <Text className="font-outfit text-muted-foreground px-4 text-center text-lg leading-7">
                   {slide.description}
                 </Text>
               </Animated.View>
@@ -128,8 +129,8 @@ export default function OnboardingScreen() {
       </Animated.ScrollView>
 
       {/* Pagination & CTA */}
-      <View className="absolute bottom-12 left-0 right-0 px-8">
-        <View className="flex-row justify-center gap-2 mb-8">
+      <View className="absolute right-0 bottom-12 left-0 px-8">
+        <View className="mb-8 flex-row justify-center gap-2">
           {SLIDES.map((_, index) => {
             const animatedDotStyle = useAnimatedStyle(() => {
               const inputRange = [(index - 1) * width, index * width, (index + 1) * width];
@@ -152,20 +153,19 @@ export default function OnboardingScreen() {
             });
 
             return (
-              <Animated.View 
-                key={index} 
+              <Animated.View
+                key={index}
                 style={[animatedDotStyle, { height: 8, borderRadius: 4, backgroundColor: 'white' }]}
               />
             );
           })}
         </View>
 
-        <Pressable 
+        <Pressable
           onPress={handleContinue}
-          className="bg-primary h-14 rounded-full flex-row items-center justify-center gap-2 shadow-lg shadow-primary/20"
-        >
-          <Text className="font-outfit-bold text-white text-lg">Get Started</Text>
-          <Icon as={ArrowRightIcon} className="text-white size-5" />
+          className="bg-primary shadow-primary/20 h-14 flex-row items-center justify-center gap-2 rounded-full shadow-lg">
+          <Text className="font-outfit-bold text-lg text-white">Get Started</Text>
+          <Icon as={ArrowRightIcon} className="size-5 text-white" />
         </Pressable>
       </View>
     </View>
