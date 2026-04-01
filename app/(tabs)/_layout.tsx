@@ -1,29 +1,24 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { Icon } from '@/components/ui/icon';
-import { CalendarIcon, SparklesIcon, LibraryIcon, UserIcon } from 'lucide-react-native';
-import { useUniwind } from 'uniwind';
-import { NAV_THEME } from '@/lib/theme';
+import { HomeIcon, FolderIcon, PlusIcon, BookmarkIcon, SearchIcon } from 'lucide-react-native';
 
 export default function TabsLayout() {
-  const { theme } = useUniwind();
-  const colors = NAV_THEME[theme ?? 'light'].colors;
-
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: theme === 'dark' ? '#0D0D12' : '#FFFFFF',
-          borderTopColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+          backgroundColor: '#0f0f0f',
+          borderTopColor: '#2a2a2a',
           borderTopWidth: 1,
           elevation: 0,
           height: 85,
           paddingBottom: 25,
           paddingTop: 10,
         },
-        tabBarActiveTintColor: theme === 'dark' ? '#5655D9' : colors.primary,
-        tabBarInactiveTintColor: theme === 'dark' ? '#4A4A55' : '#666',
+        tabBarActiveTintColor: '#22c55e',
+        tabBarInactiveTintColor: '#71717a',
         tabBarLabelStyle: {
           fontFamily: 'Outfit_500Medium',
           fontSize: 10,
@@ -31,34 +26,40 @@ export default function TabsLayout() {
           letterSpacing: 0.5,
           textTransform: 'uppercase',
         },
-      }}
-    >
+      }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Today',
-          tabBarIcon: ({ color, size }) => <Icon as={CalendarIcon} size={size} style={{ color }} />,
+          title: 'Feed',
+          tabBarIcon: ({ color, size }) => <Icon as={HomeIcon} size={size} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="brain-dump"
+        name="folders"
+        options={{
+          title: 'Folders',
+          tabBarIcon: ({ color, size }) => <Icon as={FolderIcon} size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="capture"
         options={{
           title: 'Capture',
-          tabBarIcon: ({ color, size }) => <Icon as={SparklesIcon} size={size} style={{ color }} />,
+          tabBarIcon: ({ size }) => <Icon as={PlusIcon} size={size + 8} color="#22c55e" />,
         }}
       />
       <Tabs.Screen
-        name="tome"
+        name="bookmarks"
         options={{
-          title: 'Tome',
-          tabBarIcon: ({ color, size }) => <Icon as={LibraryIcon} size={size} style={{ color }} />,
+          title: 'Bookmarks',
+          tabBarIcon: ({ color, size }) => <Icon as={BookmarkIcon} size={size} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="search"
         options={{
-          title: 'Profile',
-          tabBarIcon: ({ color, size }) => <Icon as={UserIcon} size={size} style={{ color }} />,
+          title: 'Search',
+          tabBarIcon: ({ color, size }) => <Icon as={SearchIcon} size={size} color={color} />,
         }}
       />
     </Tabs>
