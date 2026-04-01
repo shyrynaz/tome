@@ -12,6 +12,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Icon } from '@/components/ui/icon';
 import { ArrowRightIcon, SparklesIcon, FolderOpenIcon, BellIcon } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
+import { storage } from '@/lib/storage';
+
+const { width, height } = Dimensions.get('window');
 
 const SLIDES = [
   {
@@ -103,7 +107,7 @@ export default function OnboardingScreen() {
               className="items-center justify-center p-8">
               {/* Background Gradient Orb */}
               <LinearGradient
-                colors={slide.gradient}
+                colors={slide.gradient as [string, string, string]}
                 style={StyleSheet.absoluteFill}
                 start={{ x: 0.5, y: 0 }}
                 end={{ x: 0.5, y: 1 }}
