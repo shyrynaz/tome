@@ -142,3 +142,20 @@ export const setReminderStatus = mutation({
     });
   },
 });
+
+export const search = query({
+  args: { query: v.string() },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return [];
+
+    const results = await ctx.db
+      .query('entries')
+      .withSearchIndex('search_content', (q) =>
+        q.search('content', args.query).eq('userId', identity.subject)
+      )
+      .collect();
+
+    return results;
+  },
+});

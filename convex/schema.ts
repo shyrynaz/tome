@@ -30,7 +30,11 @@ export default defineSchema({
     .index('by_user', ['userId'])
     .index('by_user_and_type', ['userId', 'type'])
     .index('by_user_and_folder', ['userId', 'folderId'])
-    .index('by_user_and_reminder', ['userId', 'reminderAt']),
+    .index('by_user_and_reminder', ['userId', 'reminderAt'])
+    .searchIndex('search_content', {
+      searchField: 'content',
+      filterFields: ['userId'],
+    }),
 
   folders: defineTable({
     name: v.string(),
