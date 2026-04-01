@@ -18,26 +18,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Icon } from './ui/icon';
 import { Text } from './ui/text';
-import { 
-  CalendarIcon, 
-  CheckCircle2Icon, 
-  FileTextIcon, 
-  MicIcon, 
-  SendIcon,
-  SparklesIcon,
-  LinkIcon,
-  BrainIcon,
-  CheckIcon,
-  XIcon
-} from 'lucide-react-native';
-import { intentParser, Intent } from '@/lib/ai/intent-parser';
-import * as Haptics from 'expo-haptics';
-import { useMutation, useAction } from 'convex/react';
-import { api } from '@/convex/_generated/api';
-import { modelManager } from '@/lib/ai/model-manager';
-import { LinearGradient } from 'expo-linear-gradient';
-import * as Clipboard from 'expo-clipboard';
-import { Badge } from '@/components/ui/badge';
 
 export function BrainDump() {
   const [text, setText] = useState('');
@@ -58,10 +38,7 @@ export function BrainDump() {
 
   useEffect(() => {
     backgroundShift.value = withRepeat(
-      withSequence(
-        withTiming(1, { duration: 8000 }),
-        withTiming(0, { duration: 8000 })
-      ),
+      withSequence(withTiming(1, { duration: 6000 }), withTiming(0, { duration: 6000 })),
       -1,
       true
     );
@@ -75,7 +52,7 @@ export function BrainDump() {
   const handleTextChange = async (val: string) => {
     setText(val);
     glowOpacity.value = withTiming(val.length > 0 ? 1 : 0);
-    
+
     if (val.length > 3) {
       const result = await intentParser.parse(val);
       setCleanedText(result.cleanedText);
@@ -132,9 +109,8 @@ export function BrainDump() {
       setTimeout(() => {
         setShowSuccess(false);
       }, 2000);
-
     } catch (error) {
-      console.error("Failed to capture thought:", error);
+      console.error('Failed to capture thought:', error);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setIsProcessing(false);
@@ -142,14 +118,19 @@ export function BrainDump() {
   };
 
   const bgAnimatedStyle = useAnimatedStyle(() => {
-    const translateY = interpolate(backgroundShift.value, [0, 1], [-50, 50]);
+    const translateY = interpolate(backgroundShift.value, [0, 1], [-30, 30]);
     return { transform: [{ translateY }] };
   });
 
   const getBadgeConfig = (intent: Intent) => {
     switch (intent) {
       case 'TASK':
-        return { label: 'Task', icon: CheckCircle2Icon, color: 'text-amber-400', bg: 'bg-amber-400/10' };
+        return {
+          label: 'Task',
+          icon: CheckCircle2Icon,
+          color: 'text-amber-400',
+          bg: 'bg-amber-400/10',
+        };
       case 'EVENT':
         return { label: 'Event', icon: CalendarIcon, color: 'text-blue-400', bg: 'bg-blue-400/10' };
       case 'NOTE':
